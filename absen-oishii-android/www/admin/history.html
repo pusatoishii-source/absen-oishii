@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histori Perjalanan - OISHII</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#d32f2f">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Absen OISHII">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="../src/assets/css/admin.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        .history-container { padding: 16px; }
+
+        .history-controls {
+            display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;
+            background: white; padding: 16px; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); align-items: center;
+        }
+        .history-controls select,
+        .history-controls input {
+            padding: 8px 12px; border-radius: 6px; border: 1px solid #ddd;
+            font-size: 14px; background: white; min-width: 160px;
+        }
+        .history-controls select:focus,
+        .history-controls input:focus {
+            outline: 2px solid #d32f2f; border-color: transparent;
+        }
+        .history-controls button {
+            padding: 8px 20px; border-radius: 6px; border: none;
+            cursor: pointer; font-size: 14px; font-weight: 500;
+            transition: background 0.2s;
+        }
+        .btn-view { background: #d32f2f; color: white; }
+        .btn-view:hover { background: #b71c1c; }
+        .btn-export { background: #2196F3; color: white; }
+        .btn-export:hover { background: #1976D2; }
+
+        .history-stats {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px; margin-bottom: 16px;
+        }
+        .history-stat {
+            background: white; padding: 16px; border-radius: 12px;
+            text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .history-stat .value { font-size: 22px; font-weight: bold; color: #d32f2f; }
+        .history-stat .label { font-size: 12px; color: #888; margin-top: 4px; }
+
+        #historyMap {
+            height: 420px; border-radius: 12px; margin-bottom: 16px;
+            border: 1px solid #eee; background: #f5f5f5;
+        }
+
+        .history-timeline {
+            background: white; border-radius: 12px; padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 16px;
+        }
+        .history-timeline h3 { margin-bottom: 12px; color: #1a1a2e; font-size: 16px; }
+
+        .timeline-item {
+            display: flex; align-items: center; padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0; gap: 12px;
+        }
+        .timeline-item:last-child { border-bottom: none; }
+
+        .timeline-dot {
+            width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+        }
+        .timeline-time {
+            min-width: 70px; font-weight: 600; color: #d32f2f; font-size: 14px;
+        }
+        .timeline-location { flex: 1; font-size: 14px; color: #333; }
+        .timeline-location .label { font-size: 12px; color: #999; margin-left: 8px; }
+        .timeline-location .accuracy { font-size: 11px; color: #999; margin-left: 8px; }
+
+        .visit-list {
+            background: white; border-radius: 12px; padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .visit-list h3 { margin-bottom: 12px; color: #1a1a2e; font-size: 16px; }
+        .visit-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 12px; border-radius: 8px; margin-bottom: 6px;
+            background: #f8f9fa; border-left: 4px solid #4CAF50;
+        }
+        .visit-item.visited { background: #e8f5e9; }
+        .visit-item .v-name { font-weight: 600; color: #1a1a2e; font-size: 14px; }
+        .visit-item .v-meta { font-size: 12px; color: #666; }
+        .visit-item .v-dist {
+            font-size: 12px; font-weight: 600; color: #2e7d32;
+            padding: 3px 10px; border-radius: 12px; background: white;
+        }
+
+        .no-data {
+            text-align: center; padding: 60px 20px; color: #999;
+            background: white; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .no-data p { font-size: 16px; margin: 8px 0; }
+        .no-data .sub { font-size: 14px; color: #bbb; }
+
+        .loading-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(255,255,255,0.8); z-index: 9999;
+            align-items: center; justify-content: center;
+            font-size: 16px; color: #d32f2f; font-weight: 600;
+        }
+        .loading-overlay.show { display: flex; }
+
+        @media (max-width: 768px) {
+            .history-controls { flex-direction: column; align-items: stretch; }
+            .history-controls select, .history-controls input, .history-controls button { width: 100%; }
+            .history-stats { grid-template-columns: repeat(2, 1fr); }
+            #historyMap { height: 300px; }
+        }
+    </style>
+    <script type="module" src="/src/js/license-guard.js"></script>
+    <script src="/src/js/pwa-register.js" defer></script>
+</head>
+<body>
+    <div id="app" class="admin-app">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <span class="logo-icon"><img src="/icons/icon-96x96.png" alt="OISHII" style="height:1em;vertical-align:middle;"></span>
+                <span class="logo-text">OISHII</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/admin/dashboard.html" class="nav-link"><span class="nav-icon">📊</span><span>Dashboard</span></a>
+                <a href="/admin/monitoring.html" class="nav-link"><span class="nav-icon">📍</span><span>Monitoring</span></a>
+                <a href="/admin/history.html" class="nav-link active"><span class="nav-icon">🗺️</span><span>Histori Perjalanan</span></a>
+                <a href="/admin/attendance.html" class="nav-link"><span class="nav-icon">📋</span><span>Absensi</span></a>
+                <a href="/admin/salesmen.html" class="nav-link"><span class="nav-icon">👥</span><span>Salesman</span></a>
+                <a href="/admin/admins.html" class="nav-link"><span class="nav-icon">👤</span><span>Admin</span></a>
+                <a href="/admin/customers.html" class="nav-link"><span class="nav-icon">🏢</span><span>Customer</span></a>
+                <a href="/admin/reports.html" class="nav-link"><span class="nav-icon">📈</span><span>Laporan</span></a>
+                <a href="/admin/settings.html" class="nav-link"><span class="nav-icon">⚙️</span><span>Pengaturan</span></a>
+                <a href="/admin/license.html" class="nav-link"><span class="nav-icon">🔐</span><span>Lisensi</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="logout-btn" id="logoutBtn"><span class="nav-icon">🚪</span><span>Logout</span></button>
+            </div>
+        </aside>
+
+        <main class="admin-main">
+            <header class="admin-header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle">☰</button>
+                    <h1>🗺️ Histori Perjalanan</h1>
+                </div>
+                <div class="header-right">
+                    <span class="date-display" id="historyDate"></span>
+                </div>
+            </header>
+
+            <div class="history-container">
+                <div class="history-controls">
+                    <select id="historySalesman">
+                        <option value="">📋 Pilih Salesman...</option>
+                    </select>
+                    <input type="date" id="historyDateInput">
+                    <button class="btn-view" id="viewHistory">🔍 Tampilkan</button>
+                    <button class="btn-export" id="exportHistory">📥 Export CSV</button>
+                </div>
+
+                <div class="history-stats" id="historyStats" style="display:none;">
+                    <div class="history-stat"><div class="value" id="totalPoints">0</div><div class="label">📍 Titik GPS</div></div>
+                    <div class="history-stat"><div class="value" id="totalDistance">0 km</div><div class="label">📏 Jarak Tempuh</div></div>
+                    <div class="history-stat"><div class="value" id="duration">0 jam</div><div class="label">⏱️ Durasi Kerja</div></div>
+                    <div class="history-stat"><div class="value" id="potentialVisits">0</div><div class="label">🏢 Potensi Kunjungan</div></div>
+                </div>
+
+                <div id="historyMap" style="display:none;"></div>
+
+                <div class="history-timeline" id="historyTimeline" style="display:none;">
+                    <h3>📋 Riwayat Perjalanan</h3>
+                    <div id="timelineContent"></div>
+                </div>
+
+                <div class="visit-list" id="visitList" style="display:none;">
+                    <h3>🏢 Daftar Customer & Status Kunjungan</h3>
+                    <div id="visitContent"></div>
+                </div>
+
+                <div class="no-data" id="noData">
+                    <p>📭 Tidak ada data perjalanan</p>
+                    <p class="sub">Silakan pilih salesman dan tanggal untuk melihat histori</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">⏳ Memuat data...</div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import { createClient } from '@supabase/supabase-js';
+
+        // ==========================================
+        // ⚠️ KONFIGURASI
+        // ==========================================
+        const SUPABASE_URL      = 'https://pfboaxblozrfranaipzx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmYm9heGJsb3pyZnJhbmFpcHp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0NjY3NTIsImV4cCI6MjEwNTA0Mjc1Mn0.OjuzFEmBDSjOoQExh15ySZqKDM89Jbkkc7724fh-sxc';
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ==========================================
+        // STATE
+        // ==========================================
+        let map;
+        let layerRoutes, layerMarkers, layerCustomers;
+        let salesmen = [];
+        let customerRadiusMeter = 100;   // default, akan di-override dari work_settings
+        let currentData = null;          // simpan hasil terakhir untuk export
+
+        const $ = (id) => document.getElementById(id);
+        const showLoading = (s) => $('loadingOverlay').classList.toggle('show', s);
+
+        // ==========================================
+        // UTIL
+        // ==========================================
+        function todayStr() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        function fmtTime(iso) {
+            if (!iso) return '-';
+            const d = new Date(iso);
+            return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        // Rumus Haversine — hasil dalam meter
+        function haversine(lat1, lng1, lat2, lng2) {
+            const R = 6371000;
+            const toRad = (x) => x * Math.PI / 180;
+            const dLat = toRad(lat2 - lat1);
+            const dLng = toRad(lng2 - lng1);
+            const a = Math.sin(dLat/2)**2 +
+                      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+                      Math.sin(dLng/2)**2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+
+        // ==========================================
+        // INIT MAP
+        // ==========================================
+        function initMap() {
+            map = L.map('historyMap').setView([-7.5, 112.2], 10);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap',
+                maxZoom: 19
+            }).addTo(map);
+            layerRoutes    = L.layerGroup().addTo(map);
+            layerCustomers = L.layerGroup().addTo(map);
+            layerMarkers   = L.layerGroup().addTo(map);
+        }
+
+        // ==========================================
+        // LOAD SETTINGS
+        // ==========================================
+        async function loadSettings() {
+            const { data, error } = await supabase
+                .from('work_settings')
+                .select('customer_radius_meter')
+                .eq('active', true)
+                .order('updated_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+            if (error) { console.error('❌ work_settings:', error); return; }
+            if (data?.customer_radius_meter) {
+                customerRadiusMeter = Number(data.customer_radius_meter);
+            }
+            console.log(`✅ Radius kunjungan: ${customerRadiusMeter} m`);
+        }
+
+        // ==========================================
+        // LOAD SALESMAN (dropdown)
+        // ==========================================
+        async function loadSalesmen() {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('id, user_id, full_name, employee_code')
+                .eq('role', 'salesman')
+                .eq('active', true)
+                .order('full_name');
+            if (error) { console.error('❌ profiles:', error); return; }
+            salesmen = data || [];
+
+            const sel = $('historySalesman');
+            sel.innerHTML = '<option value="">📋 Pilih Salesman...</option>';
+            salesmen.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.user_id;
+                opt.textContent = `${s.full_name} (${s.employee_code})`;
+                sel.appendChild(opt);
+            });
+            console.log(`✅ Loaded ${salesmen.length} salesman`);
+        }
+
+        // ==========================================
+        // LOAD HISTORY (GPS + customer)
+        // ==========================================
+        async function loadHistory(userId, dateStr) {
+            showLoading(true);
+            try {
+                // 1) GPS hari itu (00:00 s/d 23:59)
+                const startOfDay = `${dateStr}T00:00:00.000Z`;
+                const endOfDay   = `${dateStr}T23:59:59.999Z`;
+
+                const { data: gpsData, error: gpsErr } = await supabase
+                    .from('location_tracking')
+                    .select('latitude, longitude, accuracy, speed, recorded_at')
+                    .eq('user_id', userId)
+                    .gte('recorded_at', startOfDay)
+                    .lte('recorded_at', endOfDay)
+                    .order('recorded_at', { ascending: true });
+                if (gpsErr) throw gpsErr;
+
+                const gps = (gpsData || []).map(g => ({
+                    lat: Number(g.latitude),
+                    lng: Number(g.longitude),
+                    accuracy: g.accuracy,
+                    speed: g.speed,
+                    recorded_at: g.recorded_at
+                }));
+
+                // 2) Customer yang di-assign ke salesman ini
+                const { data: custData, error: custErr } = await supabase
+                    .from('customers')
+                    .select('id, customer_code, customer_name, address, latitude, longitude')
+                    .eq('salesman_id', userId)
+                    .eq('active', true);
+                if (custErr) throw custErr;
+
+                const customers = (custData || []).map(c => ({
+                    id: c.id,
+                    code: c.customer_code,
+                    name: c.customer_name,
+                    address: c.address,
+                    lat: Number(c.latitude),
+                    lng: Number(c.longitude)
+                }));
+
+                // 3) Attendance hari itu
+                const { data: attData, error: attErr } = await supabase
+                    .from('attendance')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .eq('attendance_date', dateStr)
+                    .maybeSingle();
+                if (attErr) console.warn('attendance:', attErr);
+
+                // 4) Hitung jarak tempuh
+                let distanceM = 0;
+                for (let i = 1; i < gps.length; i++) {
+                    distanceM += haversine(gps[i-1].lat, gps[i-1].lng, gps[i].lat, gps[i].lng);
+                }
+
+                // 5) Hitung kunjungan — cek tiap customer
+                const visits = customers.map(cust => {
+                    let minDist = Infinity;
+                    let closestPoint = null;
+                    gps.forEach(p => {
+                        const d = haversine(p.lat, p.lng, cust.lat, cust.lng);
+                        if (d < minDist) { minDist = d; closestPoint = p; }
+                    });
+                    const visited = minDist <= customerRadiusMeter;
+                    return { ...cust, minDist, closestPoint, visited };
+                });
+
+                const visitedCount = visits.filter(v => v.visited).length;
+
+                // 6) Durasi kerja
+                let durationStr = '-';
+                if (gps.length >= 2) {
+                    const start = new Date(gps[0].recorded_at);
+                    const end   = new Date(gps[gps.length-1].recorded_at);
+                    const hours = (end - start) / 3600000;
+                    durationStr = hours >= 1
+                        ? `${hours.toFixed(1)} jam`
+                        : `${Math.round(hours*60)} menit`;
+                }
+
+                currentData = {
+                    userId, dateStr, gps, customers, visits,
+                    distanceM, visitedCount, durationStr, attendance: attData
+                };
+
+                renderAll(currentData);
+
+            } catch (err) {
+                console.error('❌ loadHistory:', err);
+                alert('Gagal memuat data: ' + (err.message || err));
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // ==========================================
+        // RENDER
+        // ==========================================
+        function renderAll(data) {
+            const { gps, visits, distanceM, visitedCount, durationStr } = data;
+
+            // Stats
+            $('totalPoints').textContent    = gps.length;
+            $('totalDistance').textContent  = `${(distanceM / 1000).toFixed(2)} km`;
+            $('duration').textContent       = durationStr;
+            $('potentialVisits').textContent = `${visitedCount} / ${visits.length}`;
+
+            // Sembunyikan no-data
+            $('noData').style.display = 'none';
+            $('historyStats').style.display = 'grid';
+
+            // Peta
+            $('historyMap').style.display = 'block';
+            setTimeout(() => map.invalidateSize(), 100);
+
+            layerRoutes.clearLayers();
+            layerCustomers.clearLayers();
+            layerMarkers.clearLayers();
+
+            // Jalur perjalanan
+            if (gps.length > 1) {
+                const coords = gps.map(p => [p.lat, p.lng]);
+                L.polyline(coords, { color: '#d32f2f', weight: 4, opacity: 0.7 }).addTo(layerRoutes);
+            }
+
+            // Titik start & end
+            if (gps.length > 0) {
+                const start = gps[0];
+                const end   = gps[gps.length - 1];
+                L.circleMarker([start.lat, start.lng], {
+                    radius: 8, fillColor: '#4CAF50', color: '#fff', weight: 2, fillOpacity: 1
+                }).bindPopup('🏁 Start: ' + fmtTime(start.recorded_at)).addTo(layerMarkers);
+
+                L.circleMarker([end.lat, end.lng], {
+                    radius: 8, fillColor: '#f44336', color: '#fff', weight: 2, fillOpacity: 1
+                }).bindPopup('🛑 End: ' + fmtTime(end.recorded_at)).addTo(layerMarkers);
+            }
+
+            // Marker customer
+            visits.forEach(v => {
+                const color = v.visited ? '#4CAF50' : '#9e9e9e';
+                const icon = v.visited ? '✅' : '⚪';
+                L.circleMarker([v.lat, v.lng], {
+                    radius: 9, fillColor: color, color: '#fff', weight: 2, fillOpacity: 1
+                }).bindPopup(`
+                    <div style="font-family:sans-serif;">
+                        <b style="color:#d32f2f;">${v.name}</b><br>
+                        <small>${v.code}</small><br>
+                        <small>${v.address || ''}</small><br>
+                        <hr style="margin:4px 0;border:none;border-top:1px solid #eee;">
+                        ${icon} <b>${v.visited ? 'DIKUNJUNGI' : 'Belum dikunjungi'}</b><br>
+                        Jarak terdekat: <b>${v.minDist === Infinity ? '-' : Math.round(v.minDist) + ' m'}</b>
+                    </div>
+                `).addTo(layerCustomers);
+            });
+
+            // Fit bounds
+            const allPoints = [
+                ...gps.map(p => [p.lat, p.lng]),
+                ...visits.map(v => [v.lat, v.lng])
+            ];
+            if (allPoints.length) {
+                map.fitBounds(allPoints, { padding: [40, 40], maxZoom: 15 });
+            }
+
+            // Timeline
+            if (gps.length > 0) {
+                $('historyTimeline').style.display = 'block';
+                const step = Math.max(1, Math.floor(gps.length / 50)); // max 50 item
+                const items = [];
+                for (let i = 0; i < gps.length; i += step) {
+                    const p = gps[i];
+                    items.push(`
+                        <div class="timeline-item">
+                            <span class="timeline-dot" style="background:#d32f2f;"></span>
+                            <span class="timeline-time">${fmtTime(p.recorded_at)}</span>
+                            <span class="timeline-location">
+                                ${p.lat.toFixed(6)}, ${p.lng.toFixed(6)}
+                                <span class="accuracy">${p.accuracy ? '±' + Math.round(p.accuracy) + 'm' : ''}</span>
+                            </span>
+                        </div>
+                    `);
+                }
+                $('timelineContent').innerHTML = items.join('');
+            } else {
+                $('historyTimeline').style.display = 'none';
+            }
+
+            // Daftar customer & status
+            if (visits.length > 0) {
+                $('visitList').style.display = 'block';
+                $('visitContent').innerHTML = visits.map(v => `
+                    <div class="visit-item ${v.visited ? 'visited' : ''}">
+                        <div>
+                            <div class="v-name">${v.visited ? '✅' : '⚪'} ${v.name}</div>
+                            <div class="v-meta">${v.code} • ${v.address || '-'}</div>
+                        </div>
+                        <div class="v-dist">
+                            ${v.minDist === Infinity ? '-' : Math.round(v.minDist) + ' m'}
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                $('visitList').style.display = 'block';
+                $('visitContent').innerHTML = `<p style="color:#999;text-align:center;padding:20px;">Belum ada customer yang di-assign ke salesman ini.</p>`;
+            }
+        }
+
+        // ==========================================
+        // EXPORT CSV
+        // ==========================================
+        function exportCSV() {
+            if (!currentData) return alert('Tampilkan data dulu.');
+            const { gps, visits, dateStr } = currentData;
+
+            const lines = [];
+
+            // Header info
+            lines.push(`Laporan Perjalanan,${dateStr}`);
+            lines.push('');
+            lines.push('=== TITIK GPS ===');
+            lines.push('Waktu,Latitude,Longitude,Akurasi (m)');
+            gps.forEach(p => {
+                lines.push(`${p.recorded_at},${p.lat},${p.lng},${p.accuracy || ''}`);
+            });
+
+            lines.push('');
+            lines.push('=== CUSTOMER & KUNJUNGAN ===');
+            lines.push('Kode,Nama,Alamat,Latitude,Longitude,Jarak Terdekat (m),Status');
+            visits.forEach(v => {
+                lines.push(`"${v.code}","${v.name}","${v.address || ''}",${v.lat},${v.lng},${Math.round(v.minDist)},"${v.visited ? 'DIKUNJUNGI' : 'Belum'}"`);
+            });
+
+            const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `history_${dateStr}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // ==========================================
+        // INIT
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', async () => {
+            $('historyDate').textContent = new Date().toLocaleDateString('id-ID', {
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+            });
+
+            // Default: hari ini
+            $('historyDateInput').value = todayStr();
+
+            initMap();
+            await loadSettings();
+            await loadSalesmen();
+
+            // Tombol tampilkan
+            $('viewHistory').addEventListener('click', () => {
+                const userId = $('historySalesman').value;
+                const dateStr = $('historyDateInput').value;
+                if (!userId) return alert('Pilih salesman dulu.');
+                if (!dateStr) return alert('Pilih tanggal dulu.');
+                loadHistory(userId, dateStr);
+            });
+
+            // Tombol export
+            $('exportHistory').addEventListener('click', exportCSV);
+
+            // Toggle sidebar
+            $('menuToggle').addEventListener('click', () => {
+                $('sidebar').classList.toggle('open');
+            });
+
+            // Logout
+            $('logoutBtn').addEventListener('click', async () => {
+                await supabase.auth.signOut();
+                window.location.href = '/auth/login.html';
+            });
+        });
+    </script>
+</body>
+</html>

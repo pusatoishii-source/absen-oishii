@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Profil - Oishii</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#d32f2f">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Absen Oishii">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="../src/assets/css/salesman.css">
+    <style>
+        .profile-container {
+            padding: 16px;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .profile-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #d32f2f;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            margin: 0 auto 12px;
+        }
+
+        .profile-name {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a1a2e;
+        }
+
+        .profile-code {
+            font-size: 14px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .profile-role {
+            display: inline-block;
+            padding: 4px 16px;
+            border-radius: 20px;
+            background: #e3f2fd;
+            color: #0d47a1;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .info-item {
+            background: #f5f7fa;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .info-item .label {
+            font-size: 11px;
+            color: #888;
+            display: block;
+        }
+
+        .info-item .value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-top: 2px;
+            word-break: break-all;
+        }
+
+        .profile-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .btn-logout {
+            padding: 14px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-logout:hover {
+            background: #d32f2f;
+        }
+
+        /* ==========================================
+           RIWAYAT ABSENSI
+           ========================================== */
+
+        .history-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            margin-bottom: 16px;
+        }
+
+        .history-card h3 {
+            font-size: 16px;
+            color: #1a1a2e;
+            margin-bottom: 12px;
+        }
+
+        .history-filter {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .history-filter input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .history-filter button {
+            padding: 8px 16px;
+            background: #d32f2f;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-item .date {
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .history-item .times {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .history-item .status {
+            font-size: 12px;
+            font-weight: 500;
+            padding: 2px 10px;
+            border-radius: 12px;
+        }
+
+        .history-item .status.checked_in {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .history-item .status.checked_out {
+            background: #e3f2fd;
+            color: #0d47a1;
+        }
+
+        .history-item .status.pending {
+            background: #f5f5f5;
+            color: #999;
+        }
+
+        .empty-text {
+            text-align: center;
+            padding: 20px;
+            color: #999;
+        }
+
+        @media (max-width: 400px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .history-item {
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+
+            .history-filter {
+                flex-direction: column;
+            }
+
+            .history-filter input,
+            .history-filter button {
+                width: 100%;
+            }
+        }
+    </style>
+    <script type="module" src="/src/js/license-guard.js"></script>
+    <script src="/src/js/pwa-register.js" defer></script>
+</head>
+<body>
+    <div class="salesman-app">
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="header-left">
+                <span class="logo"><img src="/icons/icon-96x96.png" alt="Oishii" style="height:1em;vertical-align:middle;"> Oishii</span>
+            </div>
+            <div class="header-right">
+                <span class="date-display" id="headerDate"></span>
+                <button class="btn-icon" id="backBtn">←</button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="profile-container">
+                <!-- PROFIL -->
+                <div class="profile-card">
+                    <div class="profile-avatar" id="profileAvatar">👤</div>
+                    <div class="profile-name" id="profileName">Salesman</div>
+                    <div class="profile-code" id="profileCode">SL001</div>
+                    <span class="profile-role" id="profileRole">Salesman</span>
+
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <span class="label">📧 Email</span>
+                            <span class="value" id="profileEmail">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">📱 Telepon</span>
+                            <span class="value" id="profilePhone">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">📅 Bergabung</span>
+                            <span class="value" id="profileJoined">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">📊 Status</span>
+                            <span class="value" id="profileStatus">Aktif</span>
+                        </div>
+                    </div>
+
+                    <div class="profile-actions">
+                        <button class="btn-logout" id="logoutBtn">🚪 Logout</button>
+                    </div>
+                </div>
+
+                <!-- RIWAYAT ABSENSI -->
+                <div class="history-card">
+                    <h3>📋 Riwayat Absensi</h3>
+                    <div class="history-filter">
+                        <input type="month" id="historyMonth">
+                        <button id="loadHistory">🔍 Tampilkan</button>
+                    </div>
+                    <div id="historyList">
+                        <div class="empty-text">Pilih bulan untuk melihat riwayat</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- BOTTOM NAV -->
+        <nav class="bottom-nav">
+            <button class="nav-item" onclick="navigateTo('dashboard')">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Dashboard</span>
+            </button>
+            <button class="nav-item" onclick="navigateTo('attendance')">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Absensi</span>
+            </button>
+            <button class="nav-item" onclick="navigateTo('history')">
+                <span class="nav-icon">📋</span>
+                <span class="nav-label">Riwayat</span>
+            </button>
+            <button class="nav-item active" onclick="navigateTo('profile')">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">Profil</span>
+            </button>
+        </nav>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
+            }
+        }
+    </script>
+    <script type="module" src="../src/js/salesman/profile.js"></script>
+
+    <script>
+        function navigateTo(page) {
+            const routes = {
+                'dashboard': 'dashboard.html',
+                'attendance': 'attendance.html',
+                'history': 'history.html',
+                'profile': 'profile.html',
+                'route': 'route.html'
+            };
+            const target = routes[page];
+            if (target && target !== window.location.pathname.split('/').pop()) {
+                window.location.href = target;
+            }
+        }
+
+        document.getElementById('backBtn').addEventListener('click', () => {
+            navigateTo('dashboard');
+        });
+    </script>
+</body>
+</html>

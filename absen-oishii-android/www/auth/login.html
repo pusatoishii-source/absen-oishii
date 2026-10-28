@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - OISHII</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#d32f2f">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Absen OISHII">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="../src/assets/css/global.css">
+    <style>
+        /* ==========================================
+           LOGIN PAGE STYLES
+           ========================================== */
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+            padding: 20px;
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px 36px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            transition: transform 0.3s;
+        }
+
+        .login-box:hover {
+            transform: translateY(-2px);
+        }
+
+        /* ==========================================
+           LOGO
+           ========================================== */
+
+        .logo {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .logo .icon {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .logo h1 {
+            color: #d32f2f;
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .logo p {
+            color: #888;
+            font-size: 14px;
+            margin: 4px 0 0;
+        }
+
+        /* ==========================================
+           FORM
+           ========================================== */
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid #e8ecf1;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            box-sizing: border-box;
+            background: #fafbfc;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #d32f2f;
+            box-shadow: 0 0 0 4px rgba(211, 47, 47, 0.1);
+            background: white;
+        }
+
+        input::placeholder {
+            color: #bbb;
+        }
+
+        /* ==========================================
+           BUTTON
+           ========================================== */
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #d32f2f;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s, transform 0.1s;
+            margin-top: 4px;
+        }
+
+        button:hover:not(:disabled) {
+            background: #b71c1c;
+        }
+
+        button:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* ==========================================
+           MESSAGE
+           ========================================== */
+
+        .message {
+            padding: 12px 14px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            display: none;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .message.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+
+        .message.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .message.info {
+            background: #e3f2fd;
+            color: #0d47a1;
+            border: 1px solid #bbdefb;
+        }
+
+        /* ==========================================
+           FOOTER
+           ========================================== */
+
+        .footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 12px;
+            color: #bbb;
+        }
+
+        .footer .demo {
+            margin-top: 8px;
+            padding: 10px;
+            background: #f5f7fa;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        .footer .demo code {
+            background: #e8ecf1;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #333;
+        }
+
+        .footer a {
+            color: #d32f2f;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* ==========================================
+           LOADING SPINNER
+           ========================================== */
+
+        .spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s ease-in-out infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ==========================================
+           RESPONSIVE
+           ========================================== */
+
+        @media (max-width: 480px) {
+            .login-box {
+                padding: 28px 20px;
+            }
+
+            .logo h1 {
+                font-size: 24px;
+            }
+
+            .logo .icon {
+                font-size: 36px;
+            }
+
+            input {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+
+            button {
+                padding: 12px;
+                font-size: 15px;
+            }
+        }
+    </style>
+    <script type="module" src="/src/js/license-guard.js"></script>
+    <script src="/src/js/pwa-register.js" defer></script>
+</head>
+<body>
+    <div class="login-box">
+        <!-- LOGO -->
+        <div class="logo">
+            <span class="icon"><img src="/icons/icon-96x96.png" alt="OISHII" style="height:1em;vertical-align:middle;"></span>
+            <h1>OISHII</h1>
+            <p>Sistem Absensi &amp; Monitoring Salesman</p>
+        </div>
+
+        <!-- MESSAGE -->
+        <div class="message" id="message"></div>
+
+        <!-- FORM -->
+        <form id="loginForm" autocomplete="on">
+            <div class="form-group">
+                <label for="email">📧 Email</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    placeholder="nama@afco.com" 
+                    required 
+                    autocomplete="username"
+                    value="admin@afco.com"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password">🔒 Password</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    placeholder="Masukkan password" 
+                    required 
+                    autocomplete="current-password"
+                    value="Admin123!"
+                >
+            </div>
+
+            <button type="submit" id="loginBtn">
+                🔑 Login
+            </button>
+        </form>
+
+        
+
+    <!-- ==========================================
+    SCRIPTS
+    ========================================== -->
+    <script type="importmap">
+    {
+        "imports": {
+            "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import { createClient } from '@supabase/supabase-js'
+
+        // ============================================================
+        // KONFIGURASI SUPABASE
+        // ============================================================
+        const SUPABASE_URL = 'https://pfboaxblozrfranaipzx.supabase.co'
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmYm9heGJsb3pyZnJhbmFpcHp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0NjY3NTIsImV4cCI6MjEwNTA0Mjc1Mn0.OjuzFEmBDSjOoQExh15ySZqKDM89Jbkkc7724fh-sxc'
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+        // ============================================================
+        // DOM ELEMENTS
+        // ============================================================
+        const form = document.getElementById('loginForm')
+        const emailEl = document.getElementById('email')
+        const passwordEl = document.getElementById('password')
+        const loginBtn = document.getElementById('loginBtn')
+        const messageEl = document.getElementById('message')
+
+        // ============================================================
+        // HELPERS
+        // ============================================================
+
+        function showMessage(text, type = 'error') {
+            messageEl.textContent = text
+            messageEl.className = 'message ' + type
+            messageEl.style.display = 'block'
+        }
+
+        function hideMessage() {
+            messageEl.style.display = 'none'
+        }
+
+        function setLoading(loading) {
+            if (loading) {
+                loginBtn.disabled = true
+                loginBtn.innerHTML = '<span class="spinner"></span> Login...'
+            } else {
+                loginBtn.disabled = false
+                loginBtn.innerHTML = '🔑 Login'
+            }
+        }
+
+        // ============================================================
+        // REDIRECT BY ROLE
+        // ============================================================
+
+        async function redirectByRole() {
+            try {
+                // Ambil user session
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+                if (sessionError || !session) {
+                    return false
+                }
+
+                // Ambil profile
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('user_id', session.user.id)
+                    .maybeSingle()
+
+                if (profileError || !profile) {
+                    showMessage('❌ Profile tidak ditemukan. Hubungi admin.', 'error')
+                    return false
+                }
+
+                // Redirect berdasarkan role
+                const role = profile.role
+                const basePath = window.location.origin
+
+                if (role === 'salesman') {
+                    window.location.href = basePath + '/salesman/dashboard.html'
+                    return true
+                } else if (role === 'admin' || role === 'super_admin') {
+                    window.location.href = basePath + '/admin/dashboard.html'
+                    return true
+                } else {
+                    showMessage('❌ Role tidak dikenali: ' + role, 'error')
+                    return false
+                }
+
+            } catch (error) {
+                console.error('Redirect error:', error)
+                return false
+            }
+        }
+
+        // ============================================================
+        // CHECK SESSION (Auto-login jika sudah login)
+        // ============================================================
+
+        async function checkSession() {
+            try {
+                const { data: { session }, error } = await supabase.auth.getSession()
+                if (error || !session) {
+                    return false
+                }
+                // Jika sudah login, redirect
+                await redirectByRole()
+                return true
+            } catch (error) {
+                console.error('Session check error:', error)
+                return false
+            }
+        }
+
+        // ============================================================
+        // LOGIN
+        // ============================================================
+
+        async function handleLogin(email, password) {
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email.trim(),
+                    password: password
+                })
+
+                if (error) {
+                    let errorMsg = error.message
+                    if (error.message.includes('Invalid login credentials')) {
+                        errorMsg = 'Email atau password salah. Periksa kembali.'
+                    } else if (error.message.includes('Email not confirmed')) {
+                        errorMsg = 'Email belum diverifikasi. Cek inbox Anda atau hubungi admin.'
+                    } else if (error.message.includes('Email logins are disabled')) {
+                        errorMsg = 'Login dengan email dinonaktifkan. Hubungi admin.'
+                    }
+                    throw new Error(errorMsg)
+                }
+
+                // Login berhasil, redirect
+                await redirectByRole()
+
+            } catch (error) {
+                throw error
+            }
+        }
+
+        // ============================================================
+        // EVENT LISTENERS
+        // ============================================================
+
+        // Form submit
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault()
+            hideMessage()
+
+            const email = emailEl.value.trim()
+            const password = passwordEl.value
+
+            if (!email) {
+                showMessage('⚠️ Email harus diisi', 'error')
+                emailEl.focus()
+                return
+            }
+
+            if (!password || password.length < 6) {
+                showMessage('⚠️ Password minimal 6 karakter', 'error')
+                passwordEl.focus()
+                return
+            }
+
+            setLoading(true)
+
+            try {
+                await handleLogin(email, password)
+            } catch (error) {
+                showMessage('❌ ' + error.message, 'error')
+                setLoading(false)
+            }
+        })
+
+        // Enter key pada input
+        emailEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                form.dispatchEvent(new Event('submit'))
+            }
+        })
+
+        passwordEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                form.dispatchEvent(new Event('submit'))
+            }
+        })
+
+        // ============================================================
+        // INIT - Check if already logged in
+        // ============================================================
+
+        // Tunggu DOM ready
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Cek session untuk auto-login
+            const isLoggedIn = await checkSession()
+            if (isLoggedIn) {
+                // Sudah login, redirect sudah dilakukan di checkSession
+                return
+            }
+
+            // Jika tidak login, tampilkan form dengan demo credentials
+            // Tidak perlu menampilkan pesan apapun
+        })
+
+        // Juga cek saat load (untuk berjaga-jaga)
+        setTimeout(async () => {
+            const isLoggedIn = await checkSession()
+            if (isLoggedIn) {
+                return
+            }
+        }, 500)
+
+        console.log('🔑 Login page loaded')
+        //console.log('💡 Demo: admin@afco.com / Admin123!')
+    </script>
+</body>
+</html>

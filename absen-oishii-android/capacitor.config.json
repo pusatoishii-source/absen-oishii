@@ -1,0 +1,11 @@
+{
+  "appId": "com.oishii.absen",
+  "appName": "Absen Oishii",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}

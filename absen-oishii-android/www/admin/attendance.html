@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Absensi - OISHII</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#d32f2f">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="../src/assets/css/admin.css">
+    <style>
+        .attendance-container { padding: 16px; }
+
+        .attendance-header {
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 12px; margin-bottom: 16px;
+        }
+        .attendance-header h2 { font-size: 18px; color: #1a1a2e; }
+
+        .filter-row {
+            display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+            background: white; padding: 16px; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 16px;
+        }
+        .filter-row select,
+        .filter-row input {
+            padding: 8px 12px; border: 1px solid #ddd;
+            border-radius: 6px; font-size: 14px; background: white;
+        }
+        .filter-row button {
+            padding: 8px 20px; background: #d32f2f; color: white;
+            border: none; border-radius: 6px; cursor: pointer;
+            font-size: 14px;
+        }
+        .filter-row button:hover { background: #b71c1c; }
+
+        .attendance-stats {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px; margin-bottom: 16px;
+        }
+        .attendance-stat {
+            background: white; padding: 12px; border-radius: 12px;
+            text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .attendance-stat .value {
+            font-size: 20px; font-weight: bold; color: #d32f2f;
+        }
+        .attendance-stat .label {
+            font-size: 11px; color: #888; margin-top: 4px;
+        }
+
+        .table-wrapper {
+            background: white; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden;
+        }
+        .table-wrapper .table-header {
+            padding: 16px 20px; border-bottom: 1px solid #eee;
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 8px;
+        }
+        .table-wrapper .table-header h3 {
+            font-size: 16px; color: #1a1a2e;
+        }
+        .table-container { overflow-x: auto; padding: 0 4px 4px 4px; }
+        .attendance-table {
+            width: 100%; border-collapse: collapse; font-size: 13px;
+        }
+        .attendance-table th {
+            text-align: left; padding: 10px 14px; background: #f8f9fa;
+            color: #666; font-weight: 600; font-size: 11px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            border-bottom: 2px solid #eee; white-space: nowrap;
+        }
+        .attendance-table td {
+            padding: 10px 14px; border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+        .attendance-table tr:hover td { background: #fafafa; }
+
+        .status-badge {
+            display: inline-block; padding: 3px 10px; border-radius: 12px;
+            font-size: 11px; font-weight: 500;
+        }
+        .status-badge.checked_in { background: #e8f5e9; color: #2e7d32; }
+        .status-badge.checked_out { background: #e3f2fd; color: #0d47a1; }
+        .status-badge.pending { background: #f5f5f5; color: #999; }
+
+        .empty-text { text-align: center; padding: 40px; color: #999; }
+
+        .loading-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(255,255,255,0.8); z-index: 9999;
+            align-items: center; justify-content: center;
+            font-size: 16px; color: #d32f2f; font-weight: 600;
+        }
+        .loading-overlay.show { display: flex; }
+
+        @media (max-width: 768px) {
+            .filter-row { flex-direction: column; align-items: stretch; }
+            .filter-row select,
+            .filter-row input,
+            .filter-row button { width: 100%; }
+            .attendance-stats { grid-template-columns: repeat(2, 1fr); }
+            .attendance-table { font-size: 12px; min-width: 700px; }
+            .attendance-table th, .attendance-table td { padding: 6px 10px; }
+        }
+    </style>
+    <script type="module" src="/src/js/license-guard.js"></script>
+    <script src="/src/js/pwa-register.js" defer></script>
+</head>
+<body>
+    <div id="app" class="admin-app">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <span class="logo-icon"><img src="/icons/icon-96x96.png" alt="OISHII" style="height:1em;vertical-align:middle;"></span>
+                <span class="logo-text">OISHII</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/admin/dashboard.html" class="nav-link"><span class="nav-icon">📊</span><span>Dashboard</span></a>
+                <a href="/admin/monitoring.html" class="nav-link"><span class="nav-icon">📍</span><span>Monitoring</span></a>
+                <a href="/admin/history.html" class="nav-link"><span class="nav-icon">🗺️</span><span>Histori Perjalanan</span></a>
+                <a href="/admin/attendance.html" class="nav-link active"><span class="nav-icon">📋</span><span>Absensi</span></a>
+                <a href="/admin/salesmen.html" class="nav-link"><span class="nav-icon">👥</span><span>Salesman</span></a>
+                <a href="/admin/admins.html" class="nav-link"><span class="nav-icon">👤</span><span>Admin</span></a>
+                <a href="/admin/customers.html" class="nav-link"><span class="nav-icon">🏢</span><span>Customer</span></a>
+                <a href="/admin/reports.html" class="nav-link"><span class="nav-icon">📈</span><span>Laporan</span></a>
+                <a href="/admin/settings.html" class="nav-link"><span class="nav-icon">⚙️</span><span>Pengaturan</span></a>
+                <a href="/admin/license.html" class="nav-link"><span class="nav-icon">🔐</span><span>Lisensi</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="logout-btn" id="logoutBtn"><span class="nav-icon">🚪</span><span>Logout</span></button>
+            </div>
+        </aside>
+
+        <main class="admin-main">
+            <header class="admin-header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle">☰</button>
+                    <h1>📋 Data Absensi</h1>
+                </div>
+                <div class="header-right">
+                    <span class="date-display" id="attendanceDate"></span>
+                </div>
+            </header>
+
+            <div class="attendance-container">
+                <div class="filter-row">
+                    <select id="filterSalesmanAttendance">
+                        <option value="all">Semua Salesman</option>
+                    </select>
+                    <input type="date" id="filterAttendanceDate">
+                    <select id="filterStatusAttendance">
+                        <option value="all">Semua Status</option>
+                        <option value="checked_in">✅ Masuk</option>
+                        <option value="checked_out">🏠 Pulang</option>
+                        <option value="pending">⏳ Belum Absen</option>
+                    </select>
+                    <button id="loadAttendance">🔍 Tampilkan</button>
+                </div>
+
+                <div class="attendance-stats" id="attendanceStats" style="display:none;">
+                    <div class="attendance-stat"><div class="value" id="statTotal">0</div><div class="label">Total</div></div>
+                    <div class="attendance-stat"><div class="value" id="statCheckedIn">0</div><div class="label">✅ Masuk</div></div>
+                    <div class="attendance-stat"><div class="value" id="statCheckedOut">0</div><div class="label">🏠 Pulang</div></div>
+                    <div class="attendance-stat"><div class="value" id="statPending">0</div><div class="label">⏳ Belum</div></div>
+                </div>
+
+                <div class="table-wrapper">
+                    <div class="table-header">
+                        <h3 id="attendanceTitle">📋 Daftar Absensi</h3>
+                        <span style="font-size:13px;color:#888;" id="attendanceCount"></span>
+                    </div>
+                    <div class="table-container">
+                        <table class="attendance-table">
+                            <thead>
+                                <tr>
+                                    <th>Salesman</th>
+                                    <th>Kode</th>
+                                    <th>Tanggal</th>
+                                    <th>Jam Masuk</th>
+                                    <th>Jam Pulang</th>
+                                    <th>Durasi</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendanceTableBody">
+                                <tr><td colspan="7" class="empty-text">Pilih tanggal dan klik Tampilkan</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">⏳ Memuat data...</div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import { createClient } from '@supabase/supabase-js';
+
+        // ==========================================
+        // ⚠️ KONFIGURASI
+        // ==========================================
+        const SUPABASE_URL      = 'https://pfboaxblozrfranaipzx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmYm9heGJsb3pyZnJhbmFpcHp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0NjY3NTIsImV4cCI6MjEwNTA0Mjc1Mn0.OjuzFEmBDSjOoQExh15ySZqKDM89Jbkkc7724fh-sxc';
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ==========================================
+        // STATE
+        // ==========================================
+        let salesmenMap = {};
+        let attendanceData = [];
+
+        const $ = (id) => document.getElementById(id);
+        const showLoading = (s) => $('loadingOverlay').classList.toggle('show', s);
+
+        // ==========================================
+        // UTIL
+        // ==========================================
+        function todayStr() {
+            return new Date().toISOString().split('T')[0];
+        }
+        function fmtDate(d) {
+            if (!d) return '-';
+            const dt = new Date(d);
+            return dt.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+        function fmtTime(t) {
+            if (!t) return '-';
+            const d = new Date(t);
+            if (isNaN(d.getTime())) return '-';
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mm = String(d.getMinutes()).padStart(2, '0');
+            return `${hh}:${mm}`;
+        }
+
+        // Hitung durasi dari timestamp check_in_at & check_out_at (ISO)
+        function calcDuration(checkIn, checkOut) {
+            if (!checkIn || !checkOut) return '-';
+            const start = new Date(checkIn);
+            const end = new Date(checkOut);
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) return '-';
+            const diffMs = end - start;
+            if (diffMs < 0) return '-';
+            const h = Math.floor(diffMs / 3600000);
+            const m = Math.floor((diffMs % 3600000) / 60000);
+            return `${h}j ${m}m`;
+        }
+
+        // ==========================================
+        // LOAD SALESMAN
+        // ==========================================
+        async function loadSalesmen() {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('id, user_id, full_name, employee_code')
+                .eq('role', 'salesman')
+                .eq('active', true)
+                .order('full_name');
+            if (error) { console.error('❌ profiles:', error); return; }
+
+            salesmenMap = {};
+            const sel = $('filterSalesmanAttendance');
+            sel.innerHTML = '<option value="all">Semua Salesman</option>';
+
+            (data || []).forEach(s => {
+                salesmenMap[s.user_id] = {
+                    full_name: s.full_name,
+                    employee_code: s.employee_code
+                };
+                const opt = document.createElement('option');
+                opt.value = s.user_id;
+                opt.textContent = `${s.full_name} (${s.employee_code})`;
+                sel.appendChild(opt);
+            });
+            console.log(`✅ Loaded ${Object.keys(salesmenMap).length} salesman`);
+        }
+
+        // ==========================================
+        // LOAD ATTENDANCE
+        // ==========================================
+        async function loadAttendance() {
+            showLoading(true);
+            try {
+                const userId = $('filterSalesmanAttendance').value;
+                const dateStr = $('filterAttendanceDate').value;
+                const statusFilter = $('filterStatusAttendance').value;
+
+                let query = supabase
+                    .from('attendance')
+                    .select('*')
+                    .order('attendance_date', { ascending: false });
+
+                if (dateStr) {
+                    query = query.eq('attendance_date', dateStr);
+                }
+                if (userId !== 'all') {
+                    query = query.eq('user_id', userId);
+                }
+
+                const { data, error } = await query;
+                if (error) throw error;
+
+                console.log(`✅ Loaded ${data?.length || 0} attendance`);
+
+                // Debug contoh baris
+                if (data && data[0]) console.log('📋 Contoh baris:', data[0]);
+
+                // Normalisasi
+                let rows = (data || []).map(a => {
+                    const sm = salesmenMap[a.user_id] || {};
+                    const checkIn  = a.check_in_at;
+                    const checkOut = a.check_out_at;
+                    const status   = a.status || (checkOut ? 'checked_out' : (checkIn ? 'checked_in' : 'pending'));
+                    return {
+                        salesman: sm.full_name || a.user_id || '-',
+                        kode: sm.employee_code || '-',
+                        tanggal: a.attendance_date,
+                        jamMasuk: checkIn,
+                        jamPulang: checkOut,
+                        durasi: calcDuration(checkIn, checkOut),
+                        status
+                    };
+                });
+
+                // Filter status
+                if (statusFilter !== 'all') {
+                    rows = rows.filter(r => r.status === statusFilter);
+                }
+
+                attendanceData = rows;
+                renderTable(rows);
+                renderStats(rows);
+
+            } catch (err) {
+                console.error('❌ loadAttendance:', err);
+                alert('Gagal memuat absensi: ' + (err.message || err));
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        // ==========================================
+        // RENDER
+        // ==========================================
+        function renderTable(rows) {
+            const tbody = $('attendanceTableBody');
+            if (!rows.length) {
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-text">Tidak ada data absensi.</td></tr>`;
+            } else {
+                tbody.innerHTML = rows.map(r => `
+                    <tr>
+                        <td><strong>${r.salesman}</strong></td>
+                        <td>${r.kode}</td>
+                        <td>${fmtDate(r.tanggal)}</td>
+                        <td>${fmtTime(r.jamMasuk)}</td>
+                        <td>${fmtTime(r.jamPulang)}</td>
+                        <td>${r.durasi}</td>
+                        <td><span class="status-badge ${r.status}">${
+                            r.status === 'checked_in' ? '✅ Masuk' :
+                            r.status === 'checked_out' ? '🏠 Pulang' : '⏳ Belum'
+                        }</span></td>
+                    </tr>
+                `).join('');
+            }
+            $('attendanceCount').textContent = `${rows.length} baris`;
+        }
+
+        function renderStats(rows) {
+            const total = rows.length;
+            const checkedIn = rows.filter(r => r.status === 'checked_in').length;
+            const checkedOut = rows.filter(r => r.status === 'checked_out').length;
+            const pending = rows.filter(r => r.status === 'pending').length;
+
+            $('statTotal').textContent = total;
+            $('statCheckedIn').textContent = checkedIn;
+            $('statCheckedOut').textContent = checkedOut;
+            $('statPending').textContent = pending;
+            $('attendanceStats').style.display = 'grid';
+        }
+
+        // ==========================================
+        // INIT
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', async () => {
+            $('attendanceDate').textContent = new Date().toLocaleDateString('id-ID', {
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+            });
+
+            // Default tanggal = hari ini
+            $('filterAttendanceDate').value = todayStr();
+
+            showLoading(true);
+            await loadSalesmen();
+            showLoading(false);
+
+            // Tombol tampilkan
+            $('loadAttendance').addEventListener('click', loadAttendance);
+
+            // Auto load saat pertama kali
+            await loadAttendance();
+
+            // Toggle sidebar
+            $('menuToggle').addEventListener('click', () => {
+                $('sidebar').classList.toggle('open');
+            });
+
+            // Logout
+            $('logoutBtn').addEventListener('click', async () => {
+                await supabase.auth.signOut();
+                window.location.href = '/auth/login.html';
+            });
+        });
+    </script>
+</body>
+</html>

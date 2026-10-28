@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelola Customer - OISHII</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#d32f2f">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Absen OISHII">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="../src/assets/css/admin.css">
+    <style>
+        .customers-container { padding: 16px; }
+
+        .customers-header {
+            display: flex; justify-content: space-between; align-items: center;
+            flex-wrap: wrap; gap: 12px; margin-bottom: 16px;
+        }
+        .customers-header h2 { font-size: 18px; color: #1a1a2e; }
+
+        .btn-add {
+            padding: 10px 24px; background: #4CAF50; color: white;
+            border: none; border-radius: 8px; cursor: pointer;
+            font-size: 14px; font-weight: 500;
+            transition: background 0.2s;
+        }
+        .btn-add:hover { background: #388E3C; }
+
+        .search-box {
+            padding: 8px 16px; border: 1px solid #ddd;
+            border-radius: 8px; font-size: 14px; min-width: 200px;
+        }
+        .search-box:focus { outline: 2px solid #d32f2f; border-color: transparent; }
+
+        .table-container {
+            background: white; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden;
+        }
+        .table-container table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        .table-container th {
+            text-align: left; padding: 12px 16px; background: #f8f9fa;
+            color: #666; font-weight: 600; font-size: 12px;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            border-bottom: 2px solid #eee;
+        }
+        .table-container td {
+            padding: 12px 16px; border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+        .table-container tr:hover td { background: #fafafa; }
+
+        .badge-active {
+            display: inline-block; padding: 4px 12px; border-radius: 20px;
+            font-size: 12px; font-weight: 500;
+        }
+        .badge-active.active { background: #e8f5e9; color: #2e7d32; }
+        .badge-active.inactive { background: #ffebee; color: #c62828; }
+
+        .btn-edit {
+            padding: 4px 12px; background: #2196F3; color: white;
+            border: none; border-radius: 4px; cursor: pointer;
+            font-size: 12px; margin-right: 4px;
+        }
+        .btn-edit:hover { background: #1976D2; }
+
+        .btn-delete {
+            padding: 4px 12px; background: #f44336; color: white;
+            border: none; border-radius: 4px; cursor: pointer; font-size: 12px;
+        }
+        .btn-delete:hover { background: #d32f2f; }
+
+        .empty-text { text-align: center; padding: 40px; color: #999; }
+
+        .salesman-name { font-size: 12px; color: #666; }
+
+        /* MODAL */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); z-index: 999;
+            justify-content: center; align-items: center;
+        }
+        .modal-overlay.show { display: flex; }
+
+        .modal {
+            background: white; border-radius: 16px; padding: 30px;
+            max-width: 500px; width: 90%; max-height: 90vh;
+            overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        .modal h3 { color: #1a1a2e; margin-bottom: 20px; font-size: 20px; }
+
+        .modal .form-group { margin-bottom: 16px; }
+        .modal label {
+            display: block; font-weight: 600; margin-bottom: 4px;
+            font-size: 14px; color: #333;
+        }
+        .modal label .required { color: #d32f2f; }
+        .modal input, .modal select, .modal textarea {
+            width: 100%; padding: 10px 12px; border: 1px solid #ddd;
+            border-radius: 8px; font-size: 14px; font-family: inherit;
+        }
+        .modal input:focus, .modal select:focus, .modal textarea:focus {
+            outline: 2px solid #d32f2f; border-color: transparent;
+        }
+        .modal textarea { resize: vertical; min-height: 60px; }
+
+        .modal .help-text { font-size: 12px; color: #999; margin-top: 4px; }
+
+        .modal .form-row {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+        }
+
+        .btn-locate {
+            padding: 6px 12px; background: #2196F3; color: white;
+            border: none; border-radius: 6px; cursor: pointer;
+            font-size: 12px; margin-top: 6px;
+        }
+        .btn-locate:hover { background: #1976D2; }
+
+        .btn-open-map {
+            padding: 6px 12px; background: #4CAF50; color: white;
+            border: none; border-radius: 6px; cursor: pointer;
+            font-size: 12px; margin-top: 6px; margin-left: 4px;
+        }
+        .btn-open-map:hover { background: #388E3C; }
+
+        .modal-actions {
+            display: flex; gap: 12px; margin-top: 20px;
+        }
+        .modal-actions button {
+            padding: 10px 24px; border: none; border-radius: 8px;
+            cursor: pointer; font-size: 14px; font-weight: 500; flex: 1;
+        }
+        .btn-save { background: #d32f2f; color: white; }
+        .btn-save:hover { background: #b71c1c; }
+        .btn-cancel { background: #e0e0e0; color: #333; }
+        .btn-cancel:hover { background: #bdbdbd; }
+
+        .loading-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(255,255,255,0.8); z-index: 9999;
+            align-items: center; justify-content: center;
+            font-size: 16px; color: #d32f2f; font-weight: 600;
+        }
+        .loading-overlay.show { display: flex; }
+
+        @media (max-width: 768px) {
+            .customers-header { flex-direction: column; align-items: stretch; }
+            .search-box { width: 100%; }
+            .table-container { overflow-x: auto; }
+            .table-container table { font-size: 12px; min-width: 600px; }
+            .table-container th, .table-container td { padding: 8px 10px; }
+            .modal { padding: 20px; margin: 10px; }
+            .modal .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+    <script type="module" src="/src/js/license-guard.js"></script>
+    <script src="/src/js/pwa-register.js" defer></script>
+</head>
+<body>
+    <div id="app" class="admin-app">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <span class="logo-icon"><img src="/icons/icon-96x96.png" alt="OISHII" style="height:1em;vertical-align:middle;"></span>
+                <span class="logo-text">OISHII</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/admin/dashboard.html" class="nav-link"><span class="nav-icon">📊</span><span>Dashboard</span></a>
+                <a href="/admin/monitoring.html" class="nav-link"><span class="nav-icon">📍</span><span>Monitoring</span></a>
+                <a href="/admin/history.html" class="nav-link"><span class="nav-icon">🗺️</span><span>Histori Perjalanan</span></a>
+                <a href="/admin/attendance.html" class="nav-link active"><span class="nav-icon">📋</span><span>Absensi</span></a>
+                <a href="/admin/salesmen.html" class="nav-link"><span class="nav-icon">👥</span><span>Salesman</span></a>
+                <a href="/admin/admins.html" class="nav-link"><span class="nav-icon">👤</span><span>Admin</span></a>
+                <a href="/admin/customers.html" class="nav-link active"><span class="nav-icon">🏢</span><span>Customer</span></a>
+                <a href="/admin/reports.html" class="nav-link"><span class="nav-icon">📈</span><span>Laporan</span></a>
+                <a href="/admin/settings.html" class="nav-link"><span class="nav-icon">⚙️</span><span>Pengaturan</span></a>
+                <a href="/admin/license.html" class="nav-link"><span class="nav-icon">🔐</span><span>Lisensi</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="logout-btn" id="logoutBtn"><span class="nav-icon">🚪</span><span>Logout</span></button>
+            </div>
+        </aside>
+
+        <main class="admin-main">
+            <header class="admin-header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle">☰</button>
+                    <h1>🏢 Kelola Customer</h1>
+                </div>
+                <div class="header-right">
+                    <span class="date-display" id="customersDate"></span>
+                </div>
+            </header>
+
+            <div class="customers-container">
+                <div class="customers-header">
+                    <h2>Daftar Customer</h2>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                        <input type="text" class="search-box" id="searchCustomer" placeholder="🔍 Cari customer...">
+                        <button class="btn-add" id="addCustomerBtn">➕ Tambah Customer</button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Kode</th>
+                                <th>Nama Customer</th>
+                                <th>Alamat</th>
+                                <th>Salesman</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customersTableBody">
+                            <tr><td colspan="6" class="empty-text">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h3 id="modalTitle">Tambah Customer</h3>
+            <form id="customerForm">
+                <input type="hidden" id="editId">
+
+                <div class="form-group">
+                    <label>Kode Customer <span class="required">*</span></label>
+                    <input type="text" id="customerCode" placeholder="Contoh: TK001" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Nama Customer <span class="required">*</span></label>
+                    <input type="text" id="customerName" placeholder="Nama customer" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Alamat</label>
+                    <textarea id="address" placeholder="Alamat lengkap customer"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Latitude <span class="required">*</span></label>
+                        <input type="number" id="latitude" placeholder="-7.5437" step="0.00000001" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Longitude <span class="required">*</span></label>
+                        <input type="number" id="longitude" placeholder="112.2409" step="0.00000001" required>
+                    </div>
+                </div>
+
+                <div class="help-text">
+                    Buka Google Maps → cari lokasi → klik kanan → copy koordinat.
+                    <br>
+                    <button type="button" class="btn-locate" id="btnGpsNow">📍 Pakai Lokasi Saya Sekarang</button>
+                    <button type="button" class="btn-open-map" id="btnOpenMap">🗺️ Preview di Google Maps</button>
+                </div>
+
+                <div class="form-group" style="margin-top:16px;">
+                    <label>Salesman (Opsional)</label>
+                    <select id="salesmanId">
+                        <option value="">Tidak Ditugaskan</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Status</label>
+                    <select id="active">
+                        <option value="true">Aktif</option>
+                        <option value="false">Nonaktif</option>
+                    </select>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" id="cancelModal">Batal</button>
+                    <button type="submit" class="btn-save" id="saveBtn">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">⏳ Memuat data...</div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import { createClient } from '@supabase/supabase-js';
+
+        // ==========================================
+        // ⚠️ KONFIGURASI
+        // ==========================================
+        const SUPABASE_URL      = 'https://pfboaxblozrfranaipzx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmYm9heGJsb3pyZnJhbmFpcHp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0NjY3NTIsImV4cCI6MjEwNTA0Mjc1Mn0.OjuzFEmBDSjOoQExh15ySZqKDM89Jbkkc7724fh-sxc';
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ==========================================
+        // STATE
+        // ==========================================
+        let customers = [];
+        let salesmen = [];
+        let salesmenMap = {};  // { user_id: { full_name, employee_code } }
+
+        const $ = (id) => document.getElementById(id);
+        const showLoading = (s) => $('loadingOverlay').classList.toggle('show', s);
+
+        // ==========================================
+        // LOAD SALESMAN (untuk dropdown)
+        // ==========================================
+        async function loadSalesmen() {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('id, user_id, full_name, employee_code')
+                .eq('role', 'salesman')
+                .eq('active', true)
+                .order('full_name');
+            if (error) { console.error('❌ profiles:', error); return; }
+            salesmen = data || [];
+            salesmenMap = {};
+            salesmen.forEach(s => {
+                salesmenMap[s.user_id] = {
+                    full_name: s.full_name,
+                    employee_code: s.employee_code
+                };
+            });
+
+            const sel = $('salesmanId');
+            sel.innerHTML = '<option value="">Tidak Ditugaskan</option>';
+            salesmen.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.user_id;
+                opt.textContent = `${s.full_name} (${s.employee_code})`;
+                sel.appendChild(opt);
+            });
+            console.log(`✅ Loaded ${salesmen.length} salesman`);
+        }
+
+        // ==========================================
+        // LOAD CUSTOMERS
+        // ==========================================
+        async function loadCustomers() {
+            const { data, error } = await supabase
+                .from('customers')
+                .select('*')
+                .order('customer_code');
+            if (error) { console.error('❌ customers:', error); return; }
+            customers = data || [];
+            console.log(`✅ Loaded ${customers.length} customer`);
+            renderTable();
+        }
+
+        // ==========================================
+        // RENDER TABEL
+        // ==========================================
+        function renderTable(filter = '') {
+            const tbody = $('customersTableBody');
+            const f = filter.toLowerCase().trim();
+
+            let list = customers;
+            if (f) {
+                list = customers.filter(c =>
+                    (c.customer_code || '').toLowerCase().includes(f) ||
+                    (c.customer_name || '').toLowerCase().includes(f) ||
+                    (c.address || '').toLowerCase().includes(f)
+                );
+            }
+
+            if (!list.length) {
+                tbody.innerHTML = `<tr><td colspan="6" class="empty-text">Belum ada customer. Klik "Tambah Customer" untuk menambahkan.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = list.map(c => {
+                const sm = salesmenMap[c.salesman_id];
+                const smText = sm ? `${sm.full_name}<br><small>${sm.employee_code}</small>` : '<span style="color:#999;">-</span>';
+                return `
+                    <tr>
+                        <td><strong>${c.customer_code || '-'}</strong></td>
+                        <td>${c.customer_name || '-'}</td>
+                        <td><small>${c.address || '-'}</small></td>
+                        <td class="salesman-name">${smText}</td>
+                        <td>
+                            <span class="badge-active ${c.active ? 'active' : 'inactive'}">
+                                ${c.active ? '✅ Aktif' : '❌ Nonaktif'}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn-edit" data-id="${c.id}">✏️ Edit</button>
+                            <button class="btn-delete" data-id="${c.id}">🗑️ Hapus</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ==========================================
+        // MODAL OPEN / CLOSE
+        // ==========================================
+        function openModal(customer = null) {
+            $('modalOverlay').classList.add('show');
+            if (customer) {
+                $('modalTitle').textContent = 'Edit Customer';
+                $('editId').value = customer.id;
+                $('customerCode').value = customer.customer_code || '';
+                $('customerName').value = customer.customer_name || '';
+                $('address').value = customer.address || '';
+                $('latitude').value = customer.latitude || '';
+                $('longitude').value = customer.longitude || '';
+                $('salesmanId').value = customer.salesman_id || '';
+                $('active').value = String(customer.active);
+            } else {
+                $('modalTitle').textContent = 'Tambah Customer';
+                $('customerForm').reset();
+                $('editId').value = '';
+                $('active').value = 'true';
+            }
+        }
+
+        function closeModal() {
+            $('modalOverlay').classList.remove('show');
+        }
+
+        // ==========================================
+        // SAVE (INSERT / UPDATE)
+        // ==========================================
+        async function saveCustomer(e) {
+            e.preventDefault();
+
+            const id = $('editId').value;
+            const payload = {
+                customer_code: $('customerCode').value.trim(),
+                customer_name: $('customerName').value.trim(),
+                address: $('address').value.trim() || null,
+                latitude: $('latitude').value ? Number($('latitude').value) : null,
+                longitude: $('longitude').value ? Number($('longitude').value) : null,
+                salesman_id: $('salesmanId').value || null,
+                active: $('active').value === 'true'
+            };
+
+            if (!payload.customer_code || !payload.customer_name) {
+                return alert('Kode & Nama customer wajib diisi.');
+            }
+            if (payload.latitude == null || payload.longitude == null) {
+                return alert('Latitude & Longitude wajib diisi (untuk deteksi kunjungan).');
+            }
+
+            const btn = $('saveBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Menyimpan...';
+
+            try {
+                if (id) {
+                    // UPDATE
+                    const { error } = await supabase
+                        .from('customers')
+                        .update(payload)
+                        .eq('id', id);
+                    if (error) throw error;
+                    console.log('✅ Customer diupdate');
+                } else {
+                    // INSERT
+                    const { error } = await supabase
+                        .from('customers')
+                        .insert(payload);
+                    if (error) throw error;
+                    console.log('✅ Customer ditambahkan');
+                }
+
+                closeModal();
+                await loadCustomers();
+
+            } catch (err) {
+                console.error('❌ saveCustomer:', err);
+                alert('Gagal menyimpan: ' + (err.message || err));
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Simpan';
+            }
+        }
+
+        // ==========================================
+        // DELETE
+        // ==========================================
+        async function deleteCustomer(id) {
+            const cust = customers.find(c => c.id === id);
+            if (!cust) return;
+            if (!confirm(`Hapus customer "${cust.customer_name}"? Tindakan ini tidak bisa dibatalkan.`)) return;
+
+            try {
+                const { error } = await supabase
+                    .from('customers')
+                    .delete()
+                    .eq('id', id);
+                if (error) throw error;
+                console.log('✅ Customer dihapus');
+                await loadCustomers();
+            } catch (err) {
+                console.error('❌ deleteCustomer:', err);
+                alert('Gagal menghapus: ' + (err.message || err));
+            }
+        }
+
+        // ==========================================
+        // GPS NOW — isi otomatis lat/lng
+        // ==========================================
+        function fillGpsNow() {
+            if (!navigator.geolocation) {
+                return alert('Browser tidak mendukung GPS.');
+            }
+            $('btnGpsNow').textContent = '⏳ Mengambil lokasi...';
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    $('latitude').value = pos.coords.latitude.toFixed(8);
+                    $('longitude').value = pos.coords.longitude.toFixed(8);
+                    $('btnGpsNow').textContent = `✅ Akurasi ±${Math.round(pos.coords.accuracy)}m`;
+                },
+                (err) => {
+                    console.error(err);
+                    alert('Gagal ambil lokasi: ' + err.message);
+                    $('btnGpsNow').textContent = '📍 Pakai Lokasi Saya Sekarang';
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+
+        // ==========================================
+        // OPEN GOOGLE MAPS PREVIEW
+        // ==========================================
+        function openGoogleMaps() {
+            const lat = $('latitude').value;
+            const lng = $('longitude').value;
+            if (!lat || !lng) return alert('Isi Latitude & Longitude dulu.');
+            window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+        }
+
+        // ==========================================
+        // INIT
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', async () => {
+            $('customersDate').textContent = new Date().toLocaleDateString('id-ID', {
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+            });
+
+            showLoading(true);
+            await loadSalesmen();
+            await loadCustomers();
+            showLoading(false);
+
+            // Tombol tambah
+            $('addCustomerBtn').addEventListener('click', () => openModal());
+
+            // Submit form
+            $('customerForm').addEventListener('submit', saveCustomer);
+
+            // Cancel
+            $('cancelModal').addEventListener('click', closeModal);
+
+            // Klik di luar modal = tutup
+            $('modalOverlay').addEventListener('click', (e) => {
+                if (e.target.id === 'modalOverlay') closeModal();
+            });
+
+            // Event delegation untuk edit / delete
+            $('customersTableBody').addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.btn-edit');
+                const delBtn  = e.target.closest('.btn-delete');
+                if (editBtn) {
+                    const c = customers.find(x => x.id === editBtn.dataset.id);
+                    if (c) openModal(c);
+                }
+                if (delBtn) {
+                    deleteCustomer(delBtn.dataset.id);
+                }
+            });
+
+            // Search
+            $('searchCustomer').addEventListener('input', (e) => {
+                renderTable(e.target.value);
+            });
+
+            // GPS & Maps
+            $('btnGpsNow').addEventListener('click', fillGpsNow);
+            $('btnOpenMap').addEventListener('click', openGoogleMaps);
+
+            // Toggle sidebar
+            $('menuToggle').addEventListener('click', () => {
+                $('sidebar').classList.toggle('open');
+            });
+
+            // Logout
+            $('logoutBtn').addEventListener('click', async () => {
+                await supabase.auth.signOut();
+                window.location.href = '/auth/login.html';
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lisensi - OISHII</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#d32f2f">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Absen OISHII">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="../src/assets/css/admin.css">
+    <style>
+        .license-container { padding: 16px; max-width: 900px; }
+        .license-container h2 { font-size: 18px; color: #1a1a2e; margin-bottom: 20px; }
+
+        .settings-card {
+            background: white; border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            padding: 24px; margin-bottom: 20px;
+        }
+        .settings-card .card-title { font-size: 16px; font-weight: 600; color: #1a1a2e; margin-bottom: 4px; }
+        .settings-card .card-desc { font-size: 13px; color: #888; margin-bottom: 16px; }
+
+        .license-list-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 12px;
+        }
+        .btn-refresh-license {
+            padding: 8px 16px; background: white; border: 1px solid #ddd;
+            border-radius: 8px; cursor: pointer; font-size: 13px;
+        }
+        .btn-refresh-license:hover { background: #f5f5f5; }
+
+        .license-card {
+            background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            padding: 20px; margin-bottom: 14px;
+        }
+        .license-card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .license-key { font-family: monospace; font-size: 15px; font-weight: 700; color: #1a1a2e; }
+        .license-label { font-size: 13px; color: #777; margin-top: 2px; }
+        .license-meta { display: flex; gap: 20px; flex-wrap: wrap; font-size: 13px; color: #555; margin-bottom: 12px; }
+        .license-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .btn-small {
+            padding: 6px 14px; background: #f0f0f0; border: none; border-radius: 6px;
+            cursor: pointer; font-size: 12px; font-weight: 500;
+        }
+        .btn-small:hover { background: #e2e2e2; }
+        .btn-tiny {
+            padding: 4px 10px; background: #f0f0f0; border: none; border-radius: 5px;
+            cursor: pointer; font-size: 11px; margin-right: 4px;
+        }
+        .btn-tiny.danger { background: #ffebee; color: #c62828; }
+        .btn-tiny:hover { background: #e2e2e2; }
+        .btn-tiny.danger:hover { background: #ffcdd2; }
+
+        .status-badge {
+            display: inline-block; padding: 3px 10px; border-radius: 12px;
+            font-size: 11px; font-weight: 600;
+        }
+        .status-badge.active { background: #e8f5e9; color: #2e7d32; }
+        .status-badge.blocked { background: #ffebee; color: #c62828; }
+
+        .device-list { margin-top: 14px; border-top: 1px solid #eee; padding-top: 12px; }
+        .device-loading { font-size: 13px; color: #888; padding: 8px 0; }
+        .device-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .device-table th { text-align: left; padding: 6px 8px; color: #999; font-weight: 600; }
+        .device-table td { padding: 6px 8px; border-top: 1px solid #f5f5f5; vertical-align: middle; }
+        .device-id-fingerprint { font-family: monospace; color: #aaa; font-size: 10px; }
+
+        .empty-state { text-align: center; color: #999; font-size: 14px; padding: 30px 0; }
+
+        .status-msg {
+            display: none; padding: 12px 16px; border-radius: 8px;
+            margin-bottom: 16px; font-size: 14px;
+        }
+        .status-msg.show { display: block; }
+        .status-msg.success { background: #e8f5e9; color: #2e7d32; border-left: 4px solid #4CAF50; }
+        .status-msg.error { background: #ffebee; color: #c62828; border-left: 4px solid #f44336; }
+        .status-msg.info { background: #e3f2fd; color: #1565c0; border-left: 4px solid #2196F3; }
+
+        .loading-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(255,255,255,0.8); z-index: 9999;
+            align-items: center; justify-content: center;
+            font-size: 16px; color: #d32f2f; font-weight: 600;
+        }
+        .loading-overlay.show { display: flex; }
+
+        @media (max-width: 768px) {
+            .form-row { grid-template-columns: 1fr; }
+            .settings-card { padding: 16px; }
+        }
+    </style>
+    <script src="/src/js/pwa-register.js" defer></script>
+    <script type="module" src="/src/js/license-guard.js"></script>
+</head>
+<body>
+    <div id="app" class="admin-app">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <span class="logo-icon"><img src="/icons/icon-96x96.png" alt="OISHII" style="height:1em;vertical-align:middle;"></span>
+                <span class="logo-text">OISHII</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/admin/dashboard.html" class="nav-link"><span class="nav-icon">📊</span><span>Dashboard</span></a>
+                <a href="/admin/monitoring.html" class="nav-link"><span class="nav-icon">📍</span><span>Monitoring</span></a>
+                <a href="/admin/history.html" class="nav-link"><span class="nav-icon">🗺️</span><span>Histori Perjalanan</span></a>
+                <a href="/admin/attendance.html" class="nav-link"><span class="nav-icon">📋</span><span>Absensi</span></a>
+                <a href="/admin/salesmen.html" class="nav-link"><span class="nav-icon">👥</span><span>Salesman</span></a>
+                <a href="/admin/admins.html" class="nav-link"><span class="nav-icon">👤</span><span>Admin</span></a>
+                <a href="/admin/customers.html" class="nav-link"><span class="nav-icon">🏢</span><span>Customer</span></a>
+                <a href="/admin/reports.html" class="nav-link"><span class="nav-icon">📈</span><span>Laporan</span></a>
+                <a href="/admin/settings.html" class="nav-link"><span class="nav-icon">⚙️</span><span>Pengaturan</span></a>
+                <a href="/admin/license.html" class="nav-link active"><span class="nav-icon">🔐</span><span>Lisensi</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="logout-btn" id="logoutBtn"><span class="nav-icon">🚪</span><span>Logout</span></button>
+            </div>
+        </aside>
+
+        <main class="admin-main">
+            <header class="admin-header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle">☰</button>
+                    <h1>🔐 Lisensi</h1>
+                </div>
+            </header>
+
+            <div class="license-container">
+                <div class="status-msg" id="statusMsg"></div>
+
+                <div class="settings-card" style="background:#eef2ff;border-left:4px solid #3949ab;">
+                    <h3 class="card-title">ℹ️ Tentang Halaman Ini</h3>
+                    <p class="card-desc" style="margin-bottom:0;color:#333;">
+                        Halaman ini hanya untuk <b>melihat status lisensi</b> dan <b>mengelola device</b>
+                        yang sudah terdaftar (blokir/hapus, misalnya saat ganti HP). Pembuatan
+                        lisensi baru dan perubahan kuota/expiry sengaja tidak tersedia di sini —
+                        itu dilakukan langsung lewat Supabase SQL Editor oleh penyedia aplikasi.
+                    </p>
+                </div>
+
+                <div class="license-list-header">
+                    <h2 style="margin:0;">Daftar Lisensi</h2>
+                    <button class="btn-refresh-license" id="refreshBtn">🔄 Muat Ulang</button>
+                </div>
+
+                <div id="licenseList"></div>
+            </div>
+        </main>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">⏳ Memuat...</div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
+            }
+        }
+    </script>
+    <script type="module" src="/src/js/admin/license.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "absen-oishii-android",
+  "version": "1.0.0",
+  "private": true,
+  "description": "APK Android untuk Absen Online Oishii (Capacitor)",
+  "scripts": {
+    "android:add": "cap add android",
+    "android:prepare": "node scripts/patch-android.js && python3 scripts/make-icons.py",
+    "android:sync": "cap sync android"
+  },
+  "dependencies": {
+    "@capacitor-community/background-geolocation": "^1.3.1",
+    "@capacitor/android": "^6.2.1",
+    "@capacitor/core": "^6.2.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.2.1"
+  }
+}

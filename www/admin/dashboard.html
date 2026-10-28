@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - OISHII</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#d32f2f">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Absen OISHII">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="../src/assets/css/admin.css">
+    <style>
+        /* ==========================================
+           DASHBOARD EXTRA STYLES
+           ========================================== */
+        .notif-dropdown {
+            position: absolute;
+            top: 60px;
+            right: 20px;
+            width: 340px;
+            max-height: 420px;
+            overflow-y: auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            z-index: 1000;
+            display: none;
+        }
+        .notif-dropdown.show { display: block; }
+        .notif-dropdown .notif-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid #eee;
+            font-weight: 600;
+            color: #1a1a2e;
+            font-size: 14px;
+        }
+        .notif-dropdown .notif-header button {
+            background: none;
+            border: none;
+            color: #d32f2f;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .notif-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .notif-item:hover { background: #fafafa; }
+        .notif-item.unread { background: #fff8f8; }
+        .notif-item .notif-title {
+            font-weight: 600;
+            font-size: 13px;
+            color: #1a1a2e;
+            margin-bottom: 2px;
+        }
+        .notif-item .notif-message {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.4;
+        }
+        .notif-item .notif-time {
+            font-size: 11px;
+            color: #999;
+            margin-top: 4px;
+        }
+        .notif-empty {
+            padding: 30px 20px;
+            text-align: center;
+            color: #999;
+            font-size: 13px;
+        }
+
+        .header-right { position: relative; }
+
+        .badge-gps {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-gps.online { background: #e8f5e9; color: #2e7d32; }
+        .badge-gps.offline { background: #ffebee; color: #c62828; }
+        .badge-gps.unknown { background: #f0f0f0; color: #888; }
+
+        .badge-status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-status.working { background: #e3f2fd; color: #1565c0; }
+        .badge-status.done    { background: #e8f5e9; color: #2e7d32; }
+        .badge-status.pending { background: #fff3e0; color: #ef6c00; }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,0.7);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            color: #d32f2f;
+            font-weight: 600;
+        }
+        .loading-overlay.show { display: flex; }
+    </style>
+    <script type="module" src="/src/js/license-guard.js"></script>
+    <script src="/src/js/pwa-register.js" defer></script>
+</head>
+<body>
+    <div id="app" class="admin-app">
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <span class="logo-icon"><img src="/icons/icon-96x96.png" alt="OISHII" style="height:1em;vertical-align:middle;"></span>
+                <span class="logo-text">OISHII</span>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/admin/dashboard.html" class="nav-link active"><span class="nav-icon">📊</span><span>Dashboard</span></a>
+                <a href="/admin/monitoring.html" class="nav-link"><span class="nav-icon">📍</span><span>Monitoring</span></a>
+                <a href="/admin/history.html" class="nav-link"><span class="nav-icon">🗺️</span><span>Histori Perjalanan</span></a>
+                <a href="/admin/attendance.html" class="nav-link"><span class="nav-icon">📋</span><span>Absensi</span></a>   <!-- ← INI -->
+                <a href="/admin/salesmen.html" class="nav-link"><span class="nav-icon">👥</span><span>Salesman</span></a>
+                <a href="/admin/admins.html" class="nav-link"><span class="nav-icon">👤</span><span>Admin</span></a>
+                <a href="/admin/customers.html" class="nav-link"><span class="nav-icon">🏢</span><span>Customer</span></a>
+                <a href="/admin/reports.html" class="nav-link"><span class="nav-icon">📈</span><span>Laporan</span></a>
+                <a href="/admin/settings.html" class="nav-link"><span class="nav-icon">⚙️</span><span>Pengaturan</span></a>
+                <a href="/admin/license.html" class="nav-link"><span class="nav-icon">🔐</span><span>Lisensi</span></a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="logout-btn" id="logoutBtn">
+                    <span class="nav-icon">🚪</span>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="admin-main">
+            <header class="admin-header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle">☰</button>
+                    <h1>Dashboard</h1>
+                </div>
+                <div class="header-right">
+                    <span class="date-display" id="adminDate"></span>
+                    <button class="btn-icon" id="adminNotifications">
+                        <span class="notification-badge" id="adminNotifBadge">0</span>
+                        🔔
+                    </button>
+                    <div class="admin-profile">
+                        <span id="adminName">Admin</span>
+                    </div>
+
+                    <!-- NOTIF DROPDOWN -->
+                    <div class="notif-dropdown" id="notifDropdown">
+                        <div class="notif-header">
+                            <span>🔔 Notifikasi</span>
+                            <button id="markAllRead">Tandai semua dibaca</button>
+                        </div>
+                        <div id="notifList"></div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- STATISTICS CARDS -->
+            <section class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-icon">👤</div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="totalSalesmen">0</span>
+                        <span class="stat-label">Total Salesman</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="checkedIn">0</span>
+                        <span class="stat-label">Sedang Bekerja</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="pendingIn">0</span>
+                        <span class="stat-label">Belum Masuk</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🏠</div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="checkedOut">0</span>
+                        <span class="stat-label">Sudah Pulang</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🟢</div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="gpsOnline">0</span>
+                        <span class="stat-label">GPS Online</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🔴</div>
+                    <div class="stat-info">
+                        <span class="stat-value" id="gpsOffline">0</span>
+                        <span class="stat-label">GPS Offline</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SALESMAN TABLE -->
+            <section class="table-section">
+                <div class="section-header">
+                    <h2>Status Salesman Hari Ini</h2>
+                    <button class="btn-refresh" id="refreshBtn">🔄 Refresh</button>
+                </div>
+                <div class="table-container">
+                    <table class="salesman-table">
+                        <thead>
+                            <tr>
+                                <th>Salesman</th>
+                                <th>Status</th>
+                                <th>Jam Masuk</th>
+                                <th>GPS Terakhir</th>
+                                <th>Lokasi</th>
+                                <th>Status GPS</th>
+                            </tr>
+                        </thead>
+                        <tbody id="salesmanTableBody">
+                            <tr><td colspan="6" class="loading-text">Memuat data...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">⏳ Memuat data...</div>
+
+    <!-- SCRIPTS -->
+    <script type="importmap">
+        {
+            "imports": {
+                "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import { createClient } from '@supabase/supabase-js';
+
+        // ==========================================
+        // ⚠️ KONFIGURASI — GANTI ANON KEY DI SINI
+        // ==========================================
+        const SUPABASE_URL      = 'https://pfboaxblozrfranaipzx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBmYm9heGJsb3pyZnJhbmFpcHp4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0NjY3NTIsImV4cCI6MjEwNTA0Mjc1Mn0.OjuzFEmBDSjOoQExh15ySZqKDM89Jbkkc7724fh-sxc';  // ← GANTI!
+
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ==========================================
+        // STATE
+        // ==========================================
+        let salesmen   = [];    // dari profiles
+        let attendances = [];   // absensi hari ini
+        let lastLocations = {}; // { user_id: {lat, lng, recorded_at, accuracy} }
+        let notifications = [];
+        let currentUser = null;
+
+        const $ = (id) => document.getElementById(id);
+        const showLoading = (show) => $('loadingOverlay').classList.toggle('show', show);
+
+        // ==========================================
+        // UTIL
+        // ==========================================
+        function todayStr() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        function timeAgo(iso) {
+            if (!iso) return '-';
+            const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+            if (diff < 60)   return `${Math.floor(diff)}s lalu`;
+            if (diff < 3600) return `${Math.floor(diff/60)}m lalu`;
+            if (diff < 86400) return `${Math.floor(diff/3600)}j lalu`;
+            return `${Math.floor(diff/86400)}h lalu`;
+        }
+
+        function fmtTime(t) {
+            if (!t) return '-';
+            const d = new Date(t);
+            if (isNaN(d.getTime())) return '-';
+            const hh = String(d.getHours()).padStart(2, '0');
+            const mm = String(d.getMinutes()).padStart(2, '0');
+            return `${hh}:${mm}`;
+        }
+
+        function fmtDateTime(iso) {
+            if (!iso) return '-';
+            const d = new Date(iso);
+            return d.toLocaleString('id-ID', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+        }
+
+        // ==========================================
+        // LOAD SALESMAN (profiles role='salesman')
+        // ==========================================
+        async function loadSalesmen() {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('id, user_id, full_name, employee_code, role, active')
+                .eq('role', 'salesman')
+                .eq('active', true)
+                .order('full_name');
+
+            if (error) {
+                console.error('❌ Gagal load profiles:', error);
+                return;
+            }
+            salesmen = data || [];
+            console.log(`✅ Loaded ${salesmen.length} salesman`);
+        }
+
+        // ==========================================
+        // LOAD ATTENDANCE HARI INI
+        // ==========================================
+        async function loadAttendanceToday() {
+            const today = todayStr();
+            const { data, error } = await supabase
+                .from('attendance')
+                .select('*')
+                .eq('attendance_date', today);
+
+            if (error) {
+                console.error('❌ Gagal load attendance:', error);
+                attendances = [];
+                return;
+            }
+            attendances = data || [];
+            console.log(`✅ Loaded ${attendances.length} attendance hari ini`);
+            // Debug: log struktur
+            if (attendances[0]) console.log('📋 Contoh baris attendance:', attendances[0]);
+        }
+
+        // ==========================================
+        // LOAD GPS TERAKHIR PER SALESMAN
+        // ==========================================
+        async function loadLastLocations() {
+            // Ambil 500 titik terbaru (24 jam terakhir), lalu ambil per user
+            const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+            const { data, error } = await supabase
+                .from('location_tracking')
+                .select('user_id, latitude, longitude, recorded_at, accuracy')
+                .gte('recorded_at', since)
+                .order('recorded_at', { ascending: false })
+                .limit(1000);
+
+            if (error) {
+                console.error('❌ Gagal load location_tracking:', error);
+                return;
+            }
+
+            lastLocations = {};
+            (data || []).forEach(loc => {
+                if (!lastLocations[loc.user_id]) {
+                    lastLocations[loc.user_id] = loc;
+                }
+            });
+            console.log(`✅ Loaded GPS terakhir untuk ${Object.keys(lastLocations).length} user`);
+        }
+
+        // ==========================================
+        // LOAD NOTIFIKASI
+        // ==========================================
+        async function loadNotifications() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                console.warn('⚠️ Belum login — tidak bisa load notifikasi');
+                return;
+            }
+            currentUser = user;
+
+            const { data, error } = await supabase
+                .from('notifications')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false })
+                .limit(20);
+
+            if (error) {
+                console.error('❌ Gagal load notifications:', error);
+                return;
+            }
+            notifications = data || [];
+            console.log(`✅ Loaded ${notifications.length} notifikasi`);
+        }
+
+        // ==========================================
+        // HITUNG STATUS SALESMAN
+        // ==========================================
+        function buildSalesmanRows() {
+            const onlineThresholdMin = 5;   // GPS dianggap online jika < 5 menit
+
+            return salesmen.map(s => {
+                const userId = s.user_id;   // ← auth.users id (dipakai di attendance & location_tracking)
+                const profileId = s.id;
+
+                // Cari attendance hari ini (cocokkan dengan user_id)
+                const att = attendances.find(a => a.user_id === userId);
+
+                // Status (kolom asli di tabel attendance: 'status')
+                let status = 'pending';
+                if (att) {
+                    if (att.status === 'checked_out') status = 'done';
+                    else if (att.status === 'checked_in') status = 'working';
+                }
+
+                // Jam masuk (kolom asli: check_in_at, berupa timestamp ISO)
+                const checkIn = att ? att.check_in_at : null;
+
+                // GPS terakhir
+                const loc = lastLocations[userId];
+                let gpsStatus = 'unknown';
+                let gpsAgo = '-';
+                let lokasi = '-';
+
+                if (loc) {
+                    const diffMin = (Date.now() - new Date(loc.recorded_at).getTime()) / 60000;
+                    gpsStatus = diffMin <= onlineThresholdMin ? 'online' : 'offline';
+                    gpsAgo = timeAgo(loc.recorded_at);
+                    lokasi = `${Number(loc.latitude).toFixed(5)}, ${Number(loc.longitude).toFixed(5)}`;
+                }
+
+                return {
+                    name: s.full_name || '-',
+                    code: s.employee_code || '-',
+                    status,
+                    checkIn: fmtTime(checkIn),
+                    gpsAgo,
+                    lokasi,
+                    gpsStatus,
+                    userId
+                };
+            });
+        }
+
+        // ==========================================
+        // RENDER STATS
+        // ==========================================
+        function renderStats(rows) {
+            const total      = rows.length;
+            const working    = rows.filter(r => r.status === 'working').length;
+            const pending    = rows.filter(r => r.status === 'pending').length;
+            const done       = rows.filter(r => r.status === 'done').length;
+            const gpsOnline  = rows.filter(r => r.gpsStatus === 'online').length;
+            const gpsOffline = rows.filter(r => r.gpsStatus === 'offline').length;
+
+            $('totalSalesmen').textContent = total;
+            $('checkedIn').textContent     = working;
+            $('pendingIn').textContent     = pending;
+            $('checkedOut').textContent    = done;
+            $('gpsOnline').textContent     = gpsOnline;
+            $('gpsOffline').textContent    = gpsOffline;
+        }
+
+        // ==========================================
+        // RENDER TABEL SALESMAN
+        // ==========================================
+        function renderSalesmanTable(rows) {
+            const tbody = $('salesmanTableBody');
+            if (!rows.length) {
+                tbody.innerHTML = `<tr><td colspan="6" class="loading-text">Belum ada data salesman.</td></tr>`;
+                return;
+            }
+
+            const statusLabel = {
+                working: '✅ Bekerja',
+                done:    '🏠 Pulang',
+                pending: '⏳ Belum Masuk'
+            };
+
+            tbody.innerHTML = rows.map(r => `
+                <tr>
+                    <td><strong>${r.name}</strong><br><small style="color:#999">${r.code}</small></td>
+                    <td><span class="badge-status ${r.status}">${statusLabel[r.status]}</span></td>
+                    <td>${r.checkIn}</td>
+                    <td>${r.gpsAgo}</td>
+                    <td><small>${r.lokasi}</small></td>
+                    <td><span class="badge-gps ${r.gpsStatus}">${
+                        r.gpsStatus === 'online' ? '🟢 Online' :
+                        r.gpsStatus === 'offline' ? '🔴 Offline' : '⚪ Tidak ada'
+                    }</span></td>
+                </tr>
+            `).join('');
+        }
+
+        // ==========================================
+        // RENDER NOTIFIKASI
+        // ==========================================
+        function renderNotifications() {
+            const unread = notifications.filter(n => !n.read).length;
+            $('adminNotifBadge').textContent = unread;
+            $('adminNotifBadge').style.display = unread > 0 ? 'inline-block' : 'none';
+
+            const list = $('notifList');
+            if (!notifications.length) {
+                list.innerHTML = `<div class="notif-empty">📭 Tidak ada notifikasi</div>`;
+                return;
+            }
+            list.innerHTML = notifications.map(n => `
+                <div class="notif-item ${n.read ? '' : 'unread'}" data-id="${n.id}">
+                    <div class="notif-title">${n.title || '(Tanpa judul)'}</div>
+                    <div class="notif-message">${n.message || ''}</div>
+                    <div class="notif-time">${fmtDateTime(n.created_at)}</div>
+                </div>
+            `).join('');
+        }
+
+        async function markAsRead(id) {
+            const { error } = await supabase
+                .from('notifications')
+                .update({ read: true })
+                .eq('id', id);
+            if (error) { console.error(error); return; }
+            const n = notifications.find(x => x.id === id);
+            if (n) n.read = true;
+            renderNotifications();
+        }
+
+        async function markAllAsRead() {
+            if (!currentUser) return;
+            const { error } = await supabase
+                .from('notifications')
+                .update({ read: true })
+                .eq('user_id', currentUser.id)
+                .eq('read', false);
+            if (error) { console.error(error); return; }
+            notifications.forEach(n => n.read = true);
+            renderNotifications();
+        }
+
+        // ==========================================
+        // REFRESH SEMUA
+        // ==========================================
+        async function refreshAll(silent = false) {
+            if (!silent) showLoading(true);
+            try {
+                await Promise.all([
+                    loadSalesmen(),
+                    loadAttendanceToday(),
+                    loadLastLocations(),
+                    loadNotifications()
+                ]);
+                const rows = buildSalesmanRows();
+                renderStats(rows);
+                renderSalesmanTable(rows);
+                renderNotifications();
+            } catch (e) {
+                console.error('❌ Refresh error:', e);
+            } finally {
+                if (!silent) showLoading(false);
+            }
+        }
+
+        // ==========================================
+        // INIT
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Tanggal di header
+            $('adminDate').textContent = new Date().toLocaleDateString('id-ID', {
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+            });
+
+            // Ambil nama admin
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    const { data: prof } = await supabase
+                        .from('profiles')
+                        .select('full_name')
+                        .eq('user_id', user.id)
+                        .single();
+                    if (prof?.full_name) $('adminName').textContent = prof.full_name;
+                }
+            } catch (e) { /* diamkan */ }
+
+            // Load awal
+            await refreshAll();
+
+            // Auto refresh tiap 30 detik
+            setInterval(() => refreshAll(true), 30000);
+
+            // Tombol refresh manual
+            $('refreshBtn').addEventListener('click', () => refreshAll());
+
+            // Toggle sidebar
+            $('menuToggle').addEventListener('click', () => {
+                $('sidebar').classList.toggle('open');
+            });
+
+            // Toggle notifikasi dropdown
+            $('adminNotifications').addEventListener('click', (e) => {
+                e.stopPropagation();
+                $('notifDropdown').classList.toggle('show');
+            });
+            document.addEventListener('click', (e) => {
+                const dd = $('notifDropdown');
+                if (!dd.contains(e.target) && e.target.id !== 'adminNotifications') {
+                    dd.classList.remove('show');
+                }
+            });
+
+            // Klik notifikasi item
+            $('notifList').addEventListener('click', (e) => {
+                const item = e.target.closest('.notif-item');
+                if (item) markAsRead(item.dataset.id);
+            });
+
+            // Tandai semua dibaca
+            $('markAllRead').addEventListener('click', markAllRead);
+
+            // Logout
+            $('logoutBtn').addEventListener('click', async () => {
+                await supabase.auth.signOut();
+                window.location.href = '/auth/login.html';
+            });
+        });
+    </script>
+</body>
+</html>

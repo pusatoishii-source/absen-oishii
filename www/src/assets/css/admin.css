@@ -1,0 +1,432 @@
+/* ==========================================
+   ADMIN STYLES - Oishii
+   ========================================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+    background: #f5f7fa;
+    color: #333;
+}
+
+/* ==========================================
+   LAYOUT
+   ========================================== */
+
+.admin-app {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ==========================================
+   SIDEBAR
+   ========================================== */
+
+.sidebar {
+    width: 240px;
+    background: #1a1a2e;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 100;
+    transition: transform 0.3s ease;
+}
+
+.sidebar-header {
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.sidebar-header .logo-icon {
+    font-size: 24px;
+}
+
+.sidebar-header .logo-text {
+    font-size: 20px;
+    font-weight: bold;
+    color: #d32f2f;
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 16px 0;
+    overflow-y: auto;
+}
+
+.sidebar-nav .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 24px;
+    color: rgba(255,255,255,0.7);
+    text-decoration: none;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+}
+
+.sidebar-nav .nav-link:hover {
+    background: rgba(255,255,255,0.05);
+    color: white;
+}
+
+.sidebar-nav .nav-link.active {
+    background: rgba(211, 47, 47, 0.2);
+    color: white;
+    border-left-color: #d32f2f;
+}
+
+.sidebar-nav .nav-link .nav-icon {
+    font-size: 18px;
+    width: 24px;
+    text-align: center;
+}
+
+.sidebar-footer {
+    padding: 16px 24px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.7);
+    cursor: pointer;
+    padding: 8px 0;
+    width: 100%;
+    font-size: 14px;
+    transition: color 0.2s;
+}
+
+.logout-btn:hover {
+    color: #f44336;
+}
+
+/* ==========================================
+   MAIN CONTENT
+   ========================================== */
+
+.admin-main {
+    flex: 1;
+    margin-left: 240px;
+    padding: 20px;
+    min-height: 100vh;
+}
+
+/* ==========================================
+   HEADER
+   ========================================== */
+
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    margin-bottom: 24px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-left h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1a2e;
+}
+
+.menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #666;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.date-display {
+    color: #666;
+    font-size: 14px;
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    position: relative;
+    padding: 4px;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: #d32f2f;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-profile {
+    font-weight: 500;
+    color: #333;
+}
+
+/* ==========================================
+   STATISTICS GRID
+   ========================================== */
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.stat-icon {
+    font-size: 28px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f5f7fa;
+    border-radius: 10px;
+}
+
+.stat-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #1a1a2e;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #888;
+}
+
+/* ==========================================
+   TABLE SECTION
+   ========================================== */
+
+.table-section {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    overflow: hidden;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.section-header h2 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a2e;
+}
+
+.btn-refresh {
+    padding: 6px 16px;
+    background: #d32f2f;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.2s;
+}
+
+.btn-refresh:hover {
+    background: #b71c1c;
+}
+
+.table-container {
+    overflow-x: auto;
+    padding: 0 4px 4px 4px;
+}
+
+.salesman-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.salesman-table th {
+    text-align: left;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    color: #666;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #eee;
+}
+
+.salesman-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+}
+
+.salesman-table tr:hover td {
+    background: #fafafa;
+}
+
+.salesman-table .loading-text,
+.salesman-table .empty-text {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+}
+
+/* ==========================================
+   BADGES
+   ========================================== */
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.gps-status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.gps-status-badge.online {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.gps-status-badge.warning {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.gps-status-badge.offline {
+    background: #ffebee;
+    color: #c62828;
+}
+
+/* ==========================================
+   RESPONSIVE
+   ========================================== */
+
+@media (max-width: 768px) {
+    .sidebar {
+        transform: translateX(-100%);
+    }
+
+    .sidebar.collapsed {
+        transform: translateX(0);
+    }
+
+    .admin-main {
+        margin-left: 0;
+        padding: 12px;
+    }
+
+    .menu-toggle {
+        display: block;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .admin-header {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .header-right {
+        flex-wrap: wrap;
+    }
+
+    .date-display {
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .stat-card {
+        padding: 14px;
+    }
+
+    .stat-value {
+        font-size: 18px;
+    }
+
+    .salesman-table {
+        font-size: 12px;
+    }
+
+    .salesman-table th,
+    .salesman-table td {
+        padding: 8px 10px;
+    }
+}

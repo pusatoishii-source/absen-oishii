@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Histori Perjalanan - Oishii</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#d32f2f">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16x16.png">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Absen Oishii">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="stylesheet" href="../src/assets/css/salesman.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        .history-container {
+            padding: 16px;
+        }
+
+        .history-controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .history-controls input {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .history-controls button {
+            padding: 10px 20px;
+            background: #d32f2f;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .history-controls button:hover {
+            background: #b71c1c;
+        }
+
+        #historyMap {
+            height: 350px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            border: 1px solid #eee;
+            background: #f5f5f5;
+        }
+
+        .history-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .history-stat {
+            background: white;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .history-stat .value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #d32f2f;
+        }
+
+        .history-stat .label {
+            font-size: 11px;
+            color: #888;
+            margin-top: 4px;
+        }
+
+        .history-timeline {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .history-timeline h3 {
+            font-size: 16px;
+            color: #1a1a2e;
+            margin-bottom: 12px;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            gap: 12px;
+        }
+
+        .timeline-item:last-child {
+            border-bottom: none;
+        }
+
+        .timeline-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .timeline-dot.start { background: #4CAF50; }
+        .timeline-dot.end { background: #f44336; }
+        .timeline-dot.mid { background: #2196F3; }
+
+        .timeline-time {
+            min-width: 60px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .timeline-location {
+            flex: 1;
+            font-size: 13px;
+            color: #555;
+        }
+
+        .timeline-location .label {
+            font-size: 11px;
+            color: #999;
+            margin-left: 8px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .no-data p {
+            font-size: 16px;
+            margin: 8px 0;
+        }
+
+        .no-data .sub {
+            font-size: 14px;
+            color: #bbb;
+        }
+
+        .map-title {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 6px 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 1000;
+            font-size: 12px;
+            font-weight: bold;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        @media (max-width: 480px) {
+            .history-stats {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+
+            .history-stat {
+                padding: 10px;
+            }
+
+            .history-stat .value {
+                font-size: 16px;
+            }
+
+            #historyMap {
+                height: 250px;
+            }
+
+            .timeline-item {
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+
+            .timeline-time {
+                min-width: 50px;
+                font-size: 12px;
+            }
+
+            .timeline-location {
+                font-size: 12px;
+            }
+
+            .history-controls {
+                flex-direction: column;
+            }
+
+            .history-controls input,
+            .history-controls button {
+                width: 100%;
+            }
+        }
+    </style>
+    <script type="module" src="/src/js/license-guard.js"></script>
+    <script src="/src/js/pwa-register.js" defer></script>
+</head>
+<body>
+    <div class="salesman-app">
+        <!-- HEADER -->
+        <header class="app-header">
+            <div class="header-left">
+                <span class="logo"><img src="/icons/icon-96x96.png" alt="Oishii" style="height:1em;vertical-align:middle;"> Oishii</span>
+            </div>
+            <div class="header-right">
+                <span class="date-display" id="headerDate"></span>
+                <button class="btn-icon" id="backBtn">←</button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="history-container">
+                <div class="history-controls">
+                    <input type="date" id="historyDate">
+                    <button id="viewHistory">🔍 Lihat Rute</button>
+                </div>
+
+                <!-- STATS -->
+                <div class="history-stats" id="historyStats" style="display:none;">
+                    <div class="history-stat">
+                        <div class="value" id="totalPoints">0</div>
+                        <div class="label">📍 Titik GPS</div>
+                    </div>
+                    <div class="history-stat">
+                        <div class="value" id="totalDistance">0 km</div>
+                        <div class="label">📏 Jarak</div>
+                    </div>
+                    <div class="history-stat">
+                        <div class="value" id="duration">0 jam</div>
+                        <div class="label">⏱️ Durasi</div>
+                    </div>
+                </div>
+
+                <!-- MAP -->
+                <div id="historyMap" style="position:relative;"></div>
+
+                <!-- TIMELINE -->
+                <div class="history-timeline" id="historyTimeline" style="display:none;">
+                    <h3>📋 Riwayat Perjalanan</h3>
+                    <div id="timelineContent"></div>
+                </div>
+
+                <!-- NO DATA -->
+                <div class="no-data" id="noData" style="display:none;">
+                    <p>📭 Tidak ada data perjalanan</p>
+                    <p class="sub">Pilih tanggal untuk melihat rute Anda</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- BOTTOM NAV -->
+        <nav class="bottom-nav">
+            <button class="nav-item" onclick="navigateTo('dashboard')">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Dashboard</span>
+            </button>
+            <button class="nav-item" onclick="navigateTo('attendance')">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label">Absensi</span>
+            </button>
+            <button class="nav-item active" onclick="navigateTo('history')">
+                <span class="nav-icon">📋</span>
+                <span class="nav-label">Riwayat</span>
+            </button>
+            <button class="nav-item" onclick="navigateTo('profile')">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">Profil</span>
+            </button>
+        </nav>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="importmap">
+        {
+            "imports": {
+                "@supabase/supabase-js": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm"
+            }
+        }
+    </script>
+    <script type="module" src="../src/js/salesman/history.js"></script>
+
+    <script>
+        function navigateTo(page) {
+            const routes = {
+                'dashboard': 'dashboard.html',
+                'attendance': 'attendance.html',
+                'history': 'history.html',
+                'profile': 'profile.html',
+                'route': 'route.html'
+            };
+            const target = routes[page];
+            if (target && target !== window.location.pathname.split('/').pop()) {
+                window.location.href = target;
+            }
+        }
+
+        document.getElementById('backBtn').addEventListener('click', () => {
+            navigateTo('dashboard');
+        });
+    </script>
+</body>
+</html>

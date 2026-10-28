@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lisensi Tidak Aktif - OISHII</title>
+    <link rel="icon" href="/favicon.ico">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; background: #f5f7fa; padding: 20px;
+        }
+        .container {
+            text-align: center; max-width: 480px; background: white;
+            padding: 40px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .icon { font-size: 48px; margin-bottom: 12px; }
+        h1 { font-size: 22px; color: #d32f2f; margin-bottom: 8px; }
+        p { color: #555; font-size: 15px; line-height: 1.5; margin-bottom: 8px; }
+        .reason-box {
+            margin: 20px 0; padding: 12px 16px; background: #fff3f3;
+            border-left: 4px solid #d32f2f; border-radius: 6px;
+            text-align: left; font-size: 13px; color: #b71c1c;
+        }
+        .contact { margin-top: 20px; font-size: 13px; color: #999; }
+        .contact a { color: #d32f2f; text-decoration: none; }
+        .retry-btn {
+            margin-top: 20px; padding: 10px 28px; background: #d32f2f; color: white;
+            border: none; border-radius: 8px; font-size: 14px; cursor: pointer;
+        }
+        .retry-btn:hover { background: #b71c1c; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🔒</div>
+        <h1>Aplikasi Belum Bisa Digunakan</h1>
+        <p>Lisensi untuk aplikasi ini tidak aktif di perangkat ini.</p>
+        <div class="reason-box" id="reasonBox">Memeriksa alasan...</div>
+        <p style="font-size:13px;color:#999;">
+            Kalau menurut Anda ini seharusnya diizinkan (misalnya baru ganti HP/laptop),
+            hubungi admin untuk mengaktifkan perangkat ini atau menambah kuota device.
+        </p>
+        <button class="retry-btn" id="retryBtn">🔄 Coba Lagi</button>
+        <div class="contact" id="contactBox"></div>
+    </div>
+
+    <script type="module">
+        import { LICENSE_SUPPORT_CONTACT } from '/src/services/license-config.js'
+        import { checkLicense, clearLicenseCache } from '/src/services/license-service.js'
+        import { LICENSE_KEY } from '/src/services/license-config.js'
+
+        const REASONS = {
+            not_found: 'Kode lisensi tidak terdaftar di server.',
+            inactive: 'Lisensi ini sudah dinonaktifkan oleh admin.',
+            expired: 'Masa berlaku lisensi ini sudah habis.',
+            device_blocked: 'Perangkat ini diblokir secara khusus oleh admin.',
+            device_limit: 'Jumlah perangkat yang memakai lisensi ini sudah mencapai batas maksimal.',
+            missing_params: 'Konfigurasi lisensi aplikasi belum diisi dengan benar.',
+            network_error: 'Tidak bisa menghubungi server untuk memeriksa lisensi. Periksa koneksi internet.',
+            error: 'Terjadi kesalahan saat memeriksa lisensi.',
+            unknown: 'Lisensi tidak valid.'
+        }
+
+        const params = new URLSearchParams(window.location.search)
+        const reason = params.get('reason') || 'unknown'
+        const debugInfo = params.get('debug')
+        document.getElementById('reasonBox').textContent = REASONS[reason] || REASONS.unknown
+
+        if (debugInfo) {
+            const debugEl = document.createElement('div')
+            debugEl.style.cssText = 'margin-top:8px;font-family:monospace;font-size:11px;color:#999;word-break:break-all;'
+            debugEl.textContent = 'Detail teknis: ' + debugInfo
+            document.getElementById('reasonBox').appendChild(debugEl)
+        }
+
+        if (LICENSE_SUPPORT_CONTACT) {
+            document.getElementById('contactBox').innerHTML =
+                `Kontak: <a href="mailto:${LICENSE_SUPPORT_CONTACT}">${LICENSE_SUPPORT_CONTACT}</a>`
+        }
+
+        document.getElementById('retryBtn').addEventListener('click', async () => {
+            clearLicenseCache()
+            const result = await checkLicense(LICENSE_KEY, { force: true })
+            if (result.valid) {
+                window.location.href = '/index.html'
+            } else {
+                document.getElementById('reasonBox').textContent = REASONS[result.reason] || REASONS.unknown
+            }
+        })
+    </script>
+</body>
+</html>
